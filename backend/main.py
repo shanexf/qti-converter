@@ -1,0 +1,126 @@
+import os
+from fastapi import FastAPI, UploadFile, File, Request, Header, HTTPException, Response
+from fastapi.middleware.cors import CORSMiddleware
+from fastapi.responses import JSONResponse, StreamingResponse
+from itsdangerous import URLSafeSerializer, BadSignature
+import io
+
+from extract import extract_text
+from parser import parse_questions
+from qti_generator import build_qti_package
+import billing
+
+FREE_LIMIT = int(os.environ.get("FREE_EXPORT_LIMIT", "3"))
+COOKIE_SECRET = os.environ.get("COOKIE_SECRET", "dev-secret-change-me")
+COOKIE_NAME = "qti_usage"
+
+serializer = URLSafeSerializer(COOKIE_SECRET)
+
+app = FastAPI(title="Doc-to-QTI API")
+
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=os.environ.get("ALLOWED_ORIGINS", "*").split(","),
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
+
+
+def _read_usage(request: Request) -> int:
+    raw = request.cookies.get(COOKIE_NAME)
+    if not raw:
+        return 0
+    try:
+        return int(serializer.loads(raw))
+    except BadSignature:
+        return 0
+
+
+def _write_usage(response: Response, count: int):
+    response.set_cookie(
+        COOKIE_NAME,
+        serializer.dumps(str(count)),
+        max_age=60 * 60 * 24 * 365,
+        httponly=True,
+        samesite="lax",
+    )
+
+
+@app.get("/api/health")
+def health():
+    return {"status": "ok"}
+
+
+@app.post("/api/parse")
+async def parse_file(file: UploadFile = File(...)):
+    contents = await file.read()
+    try:
+        text = extract_text(file.filename, contents)
+    except ValueError as e:
+        raise HTTPException(400, str(e))
+    questions = parse_questions(text)
+    return {"questions": questions, "count": len(questions)}
+
+
+@app.post("/api/export")
+async def export_qti(
+    request: Request,
+    response: Response,
+    x_license_key: str = Header(default=None),
+):
+    body = await request.json()
+    questions = body.get("questions", [])
+    if not questions:
+        raise HTTPException(400, "No questions provided.")
+
+    has_license = billing.is_license_valid(x_license_key)
+    usage = _read_usage(request)
+
+    if not has_license and usage >= FREE_LIMIT:
+        raise HTTPException(
+            402,
+            "Free export limit reached. Upgrade to keep exporting QTI packages.",
+        )
+
+    zip_bytes = build_qti_package(questions)
+
+    if not has_license:
+        _write_usage(response, usage + 1)
+
+    return StreamingResponse(
+        io.BytesIO(zip_bytes),
+        media_type="application/zip",
+        headers={"Content-Disposition": "attachment; filename=qti-package.zip"},
+    )
+
+
+@app.get("/api/usage")
+def get_usage(request: Request, x_license_key: str = Header(default=None)):
+    has_license = billing.is_license_valid(x_license_key)
+    usage = _read_usage(request)
+    return {
+        "used": usage,
+        "limit": FREE_LIMIT,
+        "unlimited": has_license,
+        "remaining": None if has_license else max(0, FREE_LIMIT - usage),
+    }
+
+
+@app.post("/api/create-checkout-session")
+def create_checkout_session(body: dict = None):
+    email = (body or {}).get("email")
+    try:
+        url = billing.create_checkout_session(customer_email=email)
+    except RuntimeError as e:
+        raise HTTPException(400, str(e))
+    return {"url": url}
+
+
+@app.post("/api/stripe-webhook")
+async def stripe_webhook(request: Request, stripe_signature: str = Header(default=None)):
+    payload = await request.body()
+    try:
+        billing.handle_webhook_event(payload, stripe_signature)
+    except Exception as e:
+        raise HTTPException(400, f"Webhook error: {e}")
+    return {"received": True}
