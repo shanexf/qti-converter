@@ -70,6 +70,9 @@ async def export_qti(
 ):
     body = await request.json()
     questions = body.get("questions", [])
+    version = body.get("qti_version", "2.2")
+    if version not in ("2.1", "2.2"):
+        version = "2.2"
     if not questions:
         raise HTTPException(400, "No questions provided.")
 
@@ -82,7 +85,7 @@ async def export_qti(
             "Free export limit reached. Upgrade to keep exporting QTI packages.",
         )
 
-    zip_bytes = build_qti_package(questions)
+    zip_bytes = build_qti_package(questions, version=version)
 
     if not has_license:
         _write_usage(response, usage + 1)
@@ -90,7 +93,7 @@ async def export_qti(
     return StreamingResponse(
         io.BytesIO(zip_bytes),
         media_type="application/zip",
-        headers={"Content-Disposition": "attachment; filename=qti-package.zip"},
+        headers={"Content-Disposition": f"attachment; filename=qti-{version}-package.zip"},
     )
 
 

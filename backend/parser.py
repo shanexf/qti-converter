@@ -1,6 +1,11 @@
 """
 Parses plain text (extracted from docx/pdf) into structured question objects.
 
+Works in English or German — both marker words are recognized:
+  Answer:  / Antwort:
+  Essay:   / Aufsatz:
+  True/False / Wahr/Falsch
+
 Expected source convention (shown to the teacher in the frontend help panel):
 
     1. What is the capital of France?
@@ -21,6 +26,16 @@ Expected source convention (shown to the teacher in the frontend help panel):
 
     5. Essay: Describe the causes of World War I.
 
+German equivalent of the same five types works identically, e.g.:
+
+    2. Die Chinesische Mauer ist vom Weltraum aus sichtbar.
+    *Falsch
+
+    4. Die Hauptstadt von Japan ist ____.
+    Antwort: Tokio
+
+    5. Aufsatz: Beschreiben Sie eine Ursache des Ersten Weltkriegs.
+
 Questions are separated by blank lines. A leading "N." numbers the question
 (the number itself is discarded — QTI items get their own generated IDs).
 """
@@ -28,11 +43,12 @@ import re
 import uuid
 
 MC_OPTION_RE = re.compile(r"^(\*?)\s*([a-zA-Z])[\)\.]\s*(.+)$")
-TF_BARE_RE = re.compile(r"^(\*?)\s*(True|False)\s*$", re.IGNORECASE)
+TF_BARE_RE = re.compile(r"^(\*?)\s*(True|False|Wahr|Falsch)\s*$", re.IGNORECASE)
+TF_TRUE_WORDS = {"true", "wahr"}
 MATCH_PAIR_RE = re.compile(
     r"^([A-Za-z0-9]+)[\.\)]\s*(.+?)\s*-\s*([A-Za-z0-9]+)[\.\)]\s*(.+)$"
 )
-ANSWER_RE = re.compile(r"^Answer:\s*(.+)$", re.IGNORECASE)
+ANSWER_RE = re.compile(r"^(?:Answer|Antwort):\s*(.+)$", re.IGNORECASE)
 BLANK_RE = re.compile(r"_{3,}")
 
 
@@ -68,14 +84,16 @@ def parse_questions(raw_text: str):
 
 def _parse_block(first_line: str, rest: list):
     # Essay
-    if first_line.lower().startswith("essay:"):
+    lower_first = first_line.lower()
+    if lower_first.startswith("essay:") or lower_first.startswith("aufsatz:"):
         prompt = first_line.split(":", 1)[1].strip()
         return {"type": "essay", "prompt": prompt}
 
     # Matching ("Match the following:" header, or pair lines directly present)
     pair_lines = [l for l in rest if MATCH_PAIR_RE.match(l)]
+    match_keywords = ("match", "ordnen", "zuordnen")
     if pair_lines and (
-        "match" in first_line.lower() or len(pair_lines) == len(rest)
+        any(k in first_line.lower() for k in match_keywords) or len(pair_lines) == len(rest)
     ):
         pairs = []
         for l in pair_lines:
@@ -86,18 +104,22 @@ def _parse_block(first_line: str, rest: list):
                     "right": m.group(4).strip(),
                 }
             )
-        prompt = first_line if "match" in first_line.lower() else "Match the following:"
+        prompt = first_line
         return {"type": "matching", "prompt": prompt, "pairs": pairs}
 
     # True/False shorthand: bare "*True" / "False" lines, no letter prefix
     tf_lines = [l for l in rest if TF_BARE_RE.match(l)]
     if tf_lines and len(tf_lines) == len(rest):
         if len(tf_lines) == 1:
-            # Shorthand: just states the correct answer, e.g. a lone "*True"
+            # Shorthand: just states the correct answer, e.g. a lone "*True" or "*Wahr"
             m = TF_BARE_RE.match(tf_lines[0])
-            answer_value = m.group(2).capitalize()
-            choices = [{"text": "True"}, {"text": "False"}]
-            correct_index = 0 if answer_value == "True" else 1
+            word = m.group(2).lower()
+            if word in ("true", "false"):
+                choices = [{"text": "True"}, {"text": "False"}]
+                correct_index = 0 if word == "true" else 1
+            else:
+                choices = [{"text": "Wahr"}, {"text": "Falsch"}]
+                correct_index = 0 if word == "wahr" else 1
         else:
             choices = []
             correct_index = None
@@ -105,7 +127,7 @@ def _parse_block(first_line: str, rest: list):
                 m = TF_BARE_RE.match(l)
                 if m.group(1):
                     correct_index = i
-                choices.append({"text": m.group(2).capitalize()})
+                choices.append({"text": m.group(2)})
             if correct_index is None:
                 correct_index = 0
         return {
@@ -129,7 +151,7 @@ def _parse_block(first_line: str, rest: list):
             choices.append({"text": text})
         is_tf = len(choices) == 2 and {
             c["text"].strip().lower() for c in choices
-        } <= {"true", "false"}
+        } <= {"true", "false", "wahr", "falsch"}
         return {
             "type": "truefalse" if is_tf else "multiple_choice",
             "prompt": first_line,

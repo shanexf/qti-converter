@@ -50,23 +50,35 @@
   .paywall h3{margin-top:0;font-family:'Source Serif 4',serif;}
   .empty{color:var(--graphite);text-align:center;padding:2rem 0;font-size:.9rem;}
   .status{font-size:.85rem;color:var(--graphite);margin-top:.6rem;}
+  .lang-switch{position:absolute;top:1.2rem;right:1.5rem;display:flex;gap:.3rem;}
+  .lang-btn{background:transparent;border:1px solid var(--paper-line);color:var(--graphite);
+    font-family:'IBM Plex Mono',monospace;font-size:.75rem;font-weight:600;padding:.3rem .6rem;
+    border-radius:5px;cursor:pointer;}
+  .lang-btn.active{background:var(--ink);color:#fff;border-color:var(--ink);}
+  header{position:relative;}
+  .version-select{font-family:'IBM Plex Mono',monospace;font-size:.82rem;padding:.5rem .6rem;
+    border:1px solid var(--paper-line);border-radius:6px;background:#fff;color:var(--ink);}
 </style>
 </head>
 <body>
 
 <header>
-  <h1>Keyform</h1>
-  <p>Turn a Word or PDF question set into a QTI 2.2 package, ready for your LMS.</p>
+  <div class="lang-switch">
+    <button class="lang-btn active" id="langEn" type="button">EN</button>
+    <button class="lang-btn" id="langDe" type="button">DE</button>
+  </div>
+  <h1 data-i18n="title">Keyform</h1>
+  <p data-i18n="tagline">Turn a Word or PDF question set into a QTI 2.2 package, ready for your LMS.</p>
 </header>
 
 <main>
 
   <div class="panel">
-    <strong>Formatting your source file</strong>
-    <p style="color:var(--graphite);font-size:.88rem;margin:.4rem 0 .8rem;">
+    <strong data-i18n="formatHeading">Formatting your source file</strong>
+    <p style="color:var(--graphite);font-size:.88rem;margin:.4rem 0 .8rem;" data-i18n="formatSub">
       Separate each question with a blank line. Keyform recognizes these patterns:
     </p>
-    <div class="convention">1. What is the capital of France?
+    <div class="convention" id="conventionBlock">1. What is the capital of France?
 *a) Paris
 b) London
 c) Berlin
@@ -86,9 +98,9 @@ Answer: Tokyo
 
   <div class="panel">
     <div class="upload-zone" id="dropZone">
-      <p style="margin:0 0 .8rem;color:var(--graphite);">Drop a .docx or .pdf here, or</p>
+      <p style="margin:0 0 .8rem;color:var(--graphite);" data-i18n="dropText">Drop a .docx or .pdf here, or</p>
       <input type="file" id="fileInput" accept=".docx,.pdf" style="display:none">
-      <button class="btn-primary" id="chooseBtn">Choose file</button>
+      <button class="btn-primary" id="chooseBtn" data-i18n="chooseBtn">Choose file</button>
       <p class="status" id="uploadStatus"></p>
     </div>
   </div>
@@ -102,19 +114,25 @@ Answer: Tokyo
     </div>
     <div id="cardList"></div>
     <div class="toolbar" style="margin-top:1rem;">
-      <button class="btn-ghost" id="addQuestionBtn">+ Add question manually</button>
-      <button class="btn-primary" id="exportBtn">Export QTI 2.2 package</button>
+      <button class="btn-ghost" id="addQuestionBtn" data-i18n="addQuestionBtn">+ Add question manually</button>
+      <div style="display:flex;align-items:center;gap:.6rem;">
+        <select id="qtiVersion" class="version-select">
+          <option value="2.2">QTI 2.2</option>
+          <option value="2.1">QTI 2.1 (itslearning)</option>
+        </select>
+        <button class="btn-primary" id="exportBtn" data-i18n="exportBtn">Export QTI package</button>
+      </div>
     </div>
     <p class="status" id="exportStatus"></p>
   </div>
 
   <div class="panel paywall" id="paywallPanel" style="display:none;">
-    <h3>You've used your free exports</h3>
-    <p style="color:var(--graphite);">Unlock unlimited QTI exports for your account.</p>
-    <button class="btn-primary" id="upgradeBtn">Upgrade</button>
+    <h3 data-i18n="paywallHeading">You've used your free exports</h3>
+    <p style="color:var(--graphite);" data-i18n="paywallSub">Unlock unlimited QTI exports for your account.</p>
+    <button class="btn-primary" id="upgradeBtn" data-i18n="upgradeBtn">Upgrade</button>
     <div class="license-row">
-      <input type="text" id="licenseInput" placeholder="Already purchased? Paste your license key">
-      <button class="btn-ghost" id="saveLicenseBtn">Save key</button>
+      <input type="text" id="licenseInput" data-i18n-placeholder="licensePlaceholder" placeholder="Already purchased? Paste your license key">
+      <button class="btn-ghost" id="saveLicenseBtn" data-i18n="saveLicenseBtn">Save key</button>
     </div>
   </div>
 
@@ -126,6 +144,126 @@ const API_BASE = window.location.origin.includes("localhost")
   ? "http://localhost:8000"
   : "https://qti-converter-production.up.railway.app";
 // ------------------------------------------------------------
+
+const translations = {
+  en: {
+    title: "Keyform",
+    tagline: "Turn a Word or PDF question set into a QTI 2.2 package, ready for your LMS.",
+    formatHeading: "Formatting your source file",
+    formatSub: "Separate each question with a blank line. Keyform recognizes these patterns:",
+    convention: `1. What is the capital of France?
+*a) Paris
+b) London
+c) Berlin
+
+2. The sky is blue. (True/False)
+*True
+
+3. Match the following:
+A. Dog - 1. Bark
+B. Cat - 2. Meow
+
+4. The capital of Japan is ____.
+Answer: Tokyo
+
+5. Essay: Describe the causes of World War I.`,
+    dropText: "Drop a .docx or .pdf here, or",
+    chooseBtn: "Choose file",
+    addQuestionBtn: "+ Add question manually",
+    exportBtn: "Export QTI package",
+    paywallHeading: "You've used your free exports",
+    paywallSub: "Unlock unlimited QTI exports for your account.",
+    upgradeBtn: "Upgrade",
+    licensePlaceholder: "Already purchased? Paste your license key",
+    saveLicenseBtn: "Save key",
+    reading: (name) => `Reading ${name} …`,
+    parsed: (n, name) => `Parsed ${n} question(s) from ${name}.`,
+    parseError: (msg) => `Error: ${msg}`,
+    questionCount: (n) => `${n} question(s)`,
+    unlimited: "Unlimited exports (licensed)",
+    remaining: (n) => `${n} free export(s) left`,
+    remove: "Remove",
+    correctAnswerPlaceholder: "Correct answer",
+    newQuestion: "New question",
+    building: "Building QTI package …",
+    downloaded: "Downloaded qti-package.zip",
+    exportError: (msg) => `Error: ${msg}`,
+    emailPrompt: "Email for your receipt / license key:",
+    checkoutError: "Could not start checkout.",
+  },
+  de: {
+    title: "Keyform",
+    tagline: "Verwandelt Word- oder PDF-Fragenkataloge in ein QTI-2.2-Paket für dein LMS.",
+    formatHeading: "So formatierst du deine Quelldatei",
+    formatSub: "Trenne jede Frage mit einer Leerzeile. Keyform erkennt folgende Muster:",
+    convention: `1. Was ist die Hauptstadt von Frankreich?
+*a) Paris
+b) London
+c) Berlin
+
+2. Die Chinesische Mauer ist vom Weltraum aus sichtbar.
+*Falsch
+
+3. Ordnen Sie zu:
+A. Hund - 1. Bellen
+B. Katze - 2. Miauen
+
+4. Die Hauptstadt von Japan ist ____.
+Antwort: Tokio
+
+5. Aufsatz: Beschreiben Sie eine Ursache des Ersten Weltkriegs.`,
+    dropText: "Ziehe eine .docx- oder .pdf-Datei hierher, oder",
+    chooseBtn: "Datei auswählen",
+    addQuestionBtn: "+ Frage manuell hinzufügen",
+    exportBtn: "QTI-Paket exportieren",
+    paywallHeading: "Deine kostenlosen Exporte sind aufgebraucht",
+    paywallSub: "Schalte unbegrenzte QTI-Exporte für dein Konto frei.",
+    upgradeBtn: "Upgrade",
+    licensePlaceholder: "Schon gekauft? Lizenzschlüssel hier einfügen",
+    saveLicenseBtn: "Schlüssel speichern",
+    reading: (name) => `Lese ${name} …`,
+    parsed: (n, name) => `${n} Frage(n) aus ${name} erkannt.`,
+    parseError: (msg) => `Fehler: ${msg}`,
+    questionCount: (n) => `${n} Frage(n)`,
+    unlimited: "Unbegrenzte Exporte (lizenziert)",
+    remaining: (n) => `${n} kostenlose(r) Export(e) übrig`,
+    remove: "Entfernen",
+    correctAnswerPlaceholder: "Richtige Antwort",
+    newQuestion: "Neue Frage",
+    building: "QTI-Paket wird erstellt …",
+    downloaded: "qti-package.zip heruntergeladen",
+    exportError: (msg) => `Fehler: ${msg}`,
+    emailPrompt: "E-Mail für Beleg / Lizenzschlüssel:",
+    checkoutError: "Checkout konnte nicht gestartet werden.",
+  },
+};
+
+let currentLang = localStorage.getItem("qti_lang") || "en";
+const t = (key, ...args) => {
+  const val = translations[currentLang][key];
+  return typeof val === "function" ? val(...args) : val;
+};
+
+function applyStaticTranslations(){
+  document.querySelectorAll("[data-i18n]").forEach((elm) => {
+    elm.textContent = t(elm.getAttribute("data-i18n"));
+  });
+  document.querySelectorAll("[data-i18n-placeholder]").forEach((elm) => {
+    elm.placeholder = t(elm.getAttribute("data-i18n-placeholder"));
+  });
+  el("conventionBlock").textContent = t("convention");
+  document.documentElement.lang = currentLang;
+  el("langEn").classList.toggle("active", currentLang === "en");
+  el("langDe").classList.toggle("active", currentLang === "de");
+  if (questions.length) renderQuestions();
+  refreshUsage();
+}
+
+function setLanguage(lang){
+  currentLang = lang;
+  localStorage.setItem("qti_lang", lang);
+  applyStaticTranslations();
+}
 
 let questions = [];
 
@@ -139,6 +277,9 @@ function apiHeaders(json=true){
   if (lk) h["X-License-Key"] = lk;
   return h;
 }
+
+el("langEn").onclick = () => setLanguage("en");
+el("langDe").onclick = () => setLanguage("de");
 
 // --- Upload ---
 el("chooseBtn").onclick = () => el("fileInput").click();
@@ -158,7 +299,7 @@ dropZone.addEventListener("drop",(e)=>{
 
 async function handleFile(file){
   if (!file) return;
-  el("uploadStatus").textContent = "Reading " + file.name + " …";
+  el("uploadStatus").textContent = t("reading", file.name);
   const formData = new FormData();
   formData.append("file", file);
   try{
@@ -166,18 +307,18 @@ async function handleFile(file){
     if(!res.ok) throw new Error((await res.json()).detail || "Parse failed");
     const data = await res.json();
     questions = data.questions;
-    el("uploadStatus").textContent = `Parsed ${data.count} question(s) from ${file.name}.`;
+    el("uploadStatus").textContent = t("parsed", data.count, file.name);
     renderQuestions();
     refreshUsage();
   }catch(err){
-    el("uploadStatus").textContent = "Error: " + err.message;
+    el("uploadStatus").textContent = t("parseError", err.message);
   }
 }
 
 // --- Render editable cards ---
 function renderQuestions(){
   el("reviewPanel").style.display = questions.length ? "block" : "none";
-  el("questionCount").textContent = `${questions.length} question(s)`;
+  el("questionCount").textContent = t("questionCount", questions.length);
   const list = el("cardList");
   list.innerHTML = "";
   questions.forEach((q, i) => list.appendChild(renderCard(q, i)));
@@ -196,7 +337,7 @@ function renderCard(q, index){
   head.innerHTML = `<span class="badge">${badgeFor(q.type)}</span>`;
   const removeBtn = document.createElement("button");
   removeBtn.className = "remove";
-  removeBtn.textContent = "Remove";
+  removeBtn.textContent = t("remove");
   removeBtn.onclick = () => { questions.splice(index,1); renderQuestions(); };
   head.appendChild(removeBtn);
   card.appendChild(head);
@@ -236,7 +377,7 @@ function renderCard(q, index){
     });
   } else if (q.type === "fill_blank"){
     const ans = document.createElement("input");
-    ans.type = "text"; ans.placeholder = "Correct answer";
+    ans.type = "text"; ans.placeholder = t("correctAnswerPlaceholder");
     ans.value = q.answer || "";
     ans.oninput = () => q.answer = ans.value;
     card.appendChild(ans);
@@ -246,7 +387,7 @@ function renderCard(q, index){
 }
 
 el("addQuestionBtn").onclick = () => {
-  questions.push({type:"essay", prompt:"New question"});
+  questions.push({type:"essay", prompt: t("newQuestion")});
   renderQuestions();
 };
 
@@ -254,22 +395,20 @@ el("addQuestionBtn").onclick = () => {
 async function refreshUsage(){
   const res = await fetch(`${API_BASE}/api/usage`, { headers: apiHeaders(false) });
   const data = await res.json();
-  el("usageLabel").textContent = data.unlimited
-    ? "Unlimited exports (licensed)"
-    : `${data.remaining} free export(s) left`;
+  el("usageLabel").textContent = data.unlimited ? t("unlimited") : t("remaining", data.remaining);
   el("paywallPanel").style.display = (!data.unlimited && data.remaining === 0) ? "block" : "none";
 }
 
 el("upgradeBtn").onclick = async () => {
-  const email = prompt("Email for your receipt / license key:");
+  const email = prompt(t("emailPrompt"));
   try{
     const res = await fetch(`${API_BASE}/api/create-checkout-session`, {
       method:"POST", headers: apiHeaders(), body: JSON.stringify({email})
     });
     const data = await res.json();
     if (data.url) window.location.href = data.url;
-    else alert(data.detail || "Could not start checkout.");
-  }catch(err){ alert("Error: " + err.message); }
+    else alert(data.detail || t("checkoutError"));
+  }catch(err){ alert(t("exportError", err.message)); }
 };
 
 el("saveLicenseBtn").onclick = () => {
@@ -278,11 +417,15 @@ el("saveLicenseBtn").onclick = () => {
 };
 
 // --- Export ---
+const versionSelect = el("qtiVersion");
+versionSelect.value = localStorage.getItem("qti_version") || "2.2";
+versionSelect.onchange = () => localStorage.setItem("qti_version", versionSelect.value);
+
 el("exportBtn").onclick = async () => {
-  el("exportStatus").textContent = "Building QTI package …";
+  el("exportStatus").textContent = t("building");
   try{
     const res = await fetch(`${API_BASE}/api/export`, {
-      method:"POST", headers: apiHeaders(), body: JSON.stringify({questions})
+      method:"POST", headers: apiHeaders(), body: JSON.stringify({questions, qti_version: versionSelect.value})
     });
     if (res.status === 402){
       el("exportStatus").textContent = "";
@@ -293,16 +436,16 @@ el("exportBtn").onclick = async () => {
     const blob = await res.blob();
     const url = URL.createObjectURL(blob);
     const a = document.createElement("a");
-    a.href = url; a.download = "qti-package.zip"; a.click();
+    a.href = url; a.download = `qti-${versionSelect.value}-package.zip`; a.click();
     URL.revokeObjectURL(url);
-    el("exportStatus").textContent = "Downloaded qti-package.zip";
+    el("exportStatus").textContent = t("downloaded");
     refreshUsage();
   }catch(err){
-    el("exportStatus").textContent = "Error: " + err.message;
+    el("exportStatus").textContent = t("exportError", err.message);
   }
 };
 
-refreshUsage();
+applyStaticTranslations();
 </script>
 </body>
 </html>
