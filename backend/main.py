@@ -1,5 +1,5 @@
 import os
-from fastapi import FastAPI, UploadFile, File, Request, Header, HTTPException, Response
+from fastapi import FastAPI, UploadFile, File, Request, Header, HTTPException, Response, Depends
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse, StreamingResponse
 from itsdangerous import URLSafeSerializer, BadSignature
@@ -8,11 +8,19 @@ import io
 from extract import extract_text
 from parser import parse_questions
 from qti_generator import build_qti_package
+from ratelimit import rate_limit
 import billing
 
 FREE_LIMIT = int(os.environ.get("FREE_EXPORT_LIMIT", "3"))
 COOKIE_SECRET = os.environ.get("COOKIE_SECRET", "dev-secret-change-me")
 COOKIE_NAME = "qti_usage"
+MAX_UPLOAD_MB = int(os.environ.get("MAX_UPLOAD_MB", "10"))
+SITE_ACCESS_CODE = os.environ.get("SITE_ACCESS_CODE", "")
+
+# Tune these via Railway env vars if you need to loosen/tighten them later
+RATE_LIMIT_PARSE = int(os.environ.get("RATE_LIMIT_PARSE", "20"))     # per hour, per visitor
+RATE_LIMIT_EXPORT = int(os.environ.get("RATE_LIMIT_EXPORT", "15"))   # per hour, per visitor
+RATE_LIMIT_WINDOW = 60 * 60
 
 serializer = URLSafeSerializer(COOKIE_SECRET)
 
@@ -46,14 +54,33 @@ def _write_usage(response: Response, count: int):
     )
 
 
+def require_site_code(x_site_code: str = Header(default=None)):
+    """No-op unless SITE_ACCESS_CODE is set on Railway — lets you keep the
+    app fully open, or lock it to only people you've shared the code with."""
+    if SITE_ACCESS_CODE and x_site_code != SITE_ACCESS_CODE:
+        raise HTTPException(401, "Missing or incorrect access code.")
+
+
 @app.get("/api/health")
 def health():
     return {"status": "ok"}
 
 
-@app.post("/api/parse")
+@app.get("/api/config")
+def get_config():
+    """Public info the frontend needs before it can call the protected
+    endpoints — just whether a code is required, never the code itself."""
+    return {"access_code_required": bool(SITE_ACCESS_CODE)}
+
+
+@app.post("/api/parse", dependencies=[
+    Depends(require_site_code),
+    Depends(rate_limit("parse", RATE_LIMIT_PARSE, RATE_LIMIT_WINDOW)),
+])
 async def parse_file(file: UploadFile = File(...)):
     contents = await file.read()
+    if len(contents) > MAX_UPLOAD_MB * 1024 * 1024:
+        raise HTTPException(413, f"File too large (max {MAX_UPLOAD_MB} MB).")
     try:
         text = extract_text(file.filename, contents)
     except ValueError as e:
@@ -62,7 +89,10 @@ async def parse_file(file: UploadFile = File(...)):
     return {"questions": questions, "count": len(questions)}
 
 
-@app.post("/api/export")
+@app.post("/api/export", dependencies=[
+    Depends(require_site_code),
+    Depends(rate_limit("export", RATE_LIMIT_EXPORT, RATE_LIMIT_WINDOW)),
+])
 async def export_qti(
     request: Request,
     response: Response,
@@ -109,7 +139,9 @@ def get_usage(request: Request, x_license_key: str = Header(default=None)):
     }
 
 
-@app.post("/api/create-checkout-session")
+@app.post("/api/create-checkout-session", dependencies=[
+    Depends(rate_limit("checkout", 10, RATE_LIMIT_WINDOW)),
+])
 def create_checkout_session(body: dict = None):
     email = (body or {}).get("email")
     try:

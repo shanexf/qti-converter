@@ -58,6 +58,15 @@
   header{position:relative;}
   .version-select{font-family:'IBM Plex Mono',monospace;font-size:.82rem;padding:.5rem .6rem;
     border:1px solid var(--paper-line);border-radius:6px;background:#fff;color:var(--ink);}
+  .gate-overlay{position:fixed;inset:0;background:rgba(27,39,64,0.55);display:none;
+    align-items:center;justify-content:center;z-index:100;padding:1rem;}
+  .gate-box{background:#fff;border-radius:10px;padding:2rem;max-width:360px;width:100%;
+    box-shadow:0 12px 40px rgba(0,0,0,0.25);}
+  .gate-box h3{font-family:'Source Serif 4',serif;margin:0 0 .5rem;}
+  .gate-box p{color:var(--graphite);font-size:.9rem;margin:0 0 1rem;}
+  .gate-box input{width:100%;padding:.6rem .7rem;border:1px solid var(--paper-line);
+    border-radius:6px;margin-bottom:.8rem;font-family:'Inter',sans-serif;}
+  .gate-error{color:var(--stamp);font-size:.85rem;margin:-.4rem 0 .8rem;display:none;}
 </style>
 </head>
 <body>
@@ -138,6 +147,16 @@ Answer: Tokyo
 
 </main>
 
+<div class="gate-overlay" id="gateOverlay">
+  <div class="gate-box">
+    <h3 data-i18n="accessCodeTitle">Access code required</h3>
+    <p data-i18n="accessCodeSub">This tool is currently limited to invited users. Enter your access code to continue.</p>
+    <input type="text" id="gateInput" data-i18n-placeholder="accessCodePlaceholder" placeholder="Access code">
+    <p class="gate-error" id="gateError" data-i18n="accessCodeWrong">That code isn't correct — try again.</p>
+    <button class="btn-primary" id="gateSubmit" data-i18n="accessCodeSubmit" style="width:100%;">Continue</button>
+  </div>
+</div>
+
 <script>
 // ---- Configure this to point at your deployed backend ----
 const API_BASE = window.location.origin.includes("localhost")
@@ -190,6 +209,12 @@ Answer: Tokyo
     exportError: (msg) => `Error: ${msg}`,
     emailPrompt: "Email for your receipt / license key:",
     checkoutError: "Could not start checkout.",
+    rateLimited: "You've made a lot of requests in a short time — please wait a bit and try again.",
+    accessCodeTitle: "Access code required",
+    accessCodeSub: "This tool is currently limited to invited users. Enter your access code to continue.",
+    accessCodePlaceholder: "Access code",
+    accessCodeSubmit: "Continue",
+    accessCodeWrong: "That code isn't correct — try again.",
   },
   de: {
     title: "Keyform",
@@ -235,6 +260,12 @@ Antwort: Tokio
     exportError: (msg) => `Fehler: ${msg}`,
     emailPrompt: "E-Mail für Beleg / Lizenzschlüssel:",
     checkoutError: "Checkout konnte nicht gestartet werden.",
+    rateLimited: "Du hast in kurzer Zeit sehr viele Anfragen gestellt — bitte warte kurz und versuche es erneut.",
+    accessCodeTitle: "Zugangscode erforderlich",
+    accessCodeSub: "Dieses Tool ist derzeit nur für eingeladene Nutzer freigegeben. Bitte gib deinen Zugangscode ein.",
+    accessCodePlaceholder: "Zugangscode",
+    accessCodeSubmit: "Weiter",
+    accessCodeWrong: "Dieser Code ist nicht korrekt — versuche es erneut.",
   },
 };
 
@@ -269,14 +300,55 @@ let questions = [];
 
 const el = (id) => document.getElementById(id);
 const licenseKey = () => localStorage.getItem("qti_license") || "";
+const siteCode = () => localStorage.getItem("qti_site_code") || "";
 
 function apiHeaders(json=true){
   const h = {};
   if (json) h["Content-Type"] = "application/json";
   const lk = licenseKey();
   if (lk) h["X-License-Key"] = lk;
+  const sc = siteCode();
+  if (sc) h["X-Site-Code"] = sc;
   return h;
 }
+
+// Returns a friendly message for common gate/rate-limit failures, or null
+// if the response should be handled normally by the caller.
+async function checkGateErrors(res){
+  if (res.status === 429) return t("rateLimited");
+  if (res.status === 401){
+    localStorage.removeItem("qti_site_code");
+    showAccessCodeGate(true);
+    return t("accessCodeWrong");
+  }
+  return null;
+}
+
+// --- Access code gate ---
+async function initAccessGate(){
+  try{
+    const res = await fetch(`${API_BASE}/api/config`);
+    const data = await res.json();
+    if (data.access_code_required && !siteCode()){
+      showAccessCodeGate(false);
+    }
+  }catch(err){ /* if this fails, the API calls below will fail too and surface the error */ }
+}
+
+function showAccessCodeGate(wasWrong){
+  el("gateOverlay").style.display = "flex";
+  el("gateError").style.display = wasWrong ? "block" : "none";
+}
+
+el("gateSubmit").onclick = () => {
+  const val = el("gateInput").value.trim();
+  if (!val) return;
+  localStorage.setItem("qti_site_code", val);
+  el("gateOverlay").style.display = "none";
+};
+el("gateInput").addEventListener("keydown", (e) => {
+  if (e.key === "Enter") el("gateSubmit").click();
+});
 
 el("langEn").onclick = () => setLanguage("en");
 el("langDe").onclick = () => setLanguage("de");
@@ -304,6 +376,8 @@ async function handleFile(file){
   formData.append("file", file);
   try{
     const res = await fetch(`${API_BASE}/api/parse`, { method:"POST", body: formData, headers: apiHeaders(false) });
+    const gateMsg = await checkGateErrors(res);
+    if (gateMsg){ el("uploadStatus").textContent = gateMsg; return; }
     if(!res.ok) throw new Error((await res.json()).detail || "Parse failed");
     const data = await res.json();
     questions = data.questions;
@@ -427,6 +501,8 @@ el("exportBtn").onclick = async () => {
     const res = await fetch(`${API_BASE}/api/export`, {
       method:"POST", headers: apiHeaders(), body: JSON.stringify({questions, qti_version: versionSelect.value})
     });
+    const gateMsg = await checkGateErrors(res);
+    if (gateMsg){ el("exportStatus").textContent = gateMsg; return; }
     if (res.status === 402){
       el("exportStatus").textContent = "";
       refreshUsage();
@@ -446,6 +522,7 @@ el("exportBtn").onclick = async () => {
 };
 
 applyStaticTranslations();
+initAccessGate();
 </script>
 </body>
 </html>
