@@ -127,7 +127,7 @@ async def export_qti(
     )
 
 
-@app.get("/api/usage")
+@app.get("/api/usage", dependencies=[Depends(require_site_code)])
 def get_usage(request: Request, x_license_key: str = Header(default=None)):
     has_license = billing.is_license_valid(x_license_key)
     usage = _read_usage(request)

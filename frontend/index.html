@@ -340,11 +340,26 @@ function showAccessCodeGate(wasWrong){
   el("gateError").style.display = wasWrong ? "block" : "none";
 }
 
-el("gateSubmit").onclick = () => {
+el("gateSubmit").onclick = async () => {
   const val = el("gateInput").value.trim();
   if (!val) return;
+  el("gateSubmit").disabled = true;
+  const previous = siteCode();
   localStorage.setItem("qti_site_code", val);
-  el("gateOverlay").style.display = "none";
+  try{
+    const res = await fetch(`${API_BASE}/api/usage`, { headers: apiHeaders(false) });
+    if (res.ok){
+      el("gateOverlay").style.display = "none";
+      refreshUsage();
+    } else {
+      if (previous) localStorage.setItem("qti_site_code", previous); else localStorage.removeItem("qti_site_code");
+      el("gateError").style.display = "block";
+    }
+  }catch(err){
+    el("gateError").style.display = "block";
+  }finally{
+    el("gateSubmit").disabled = false;
+  }
 };
 el("gateInput").addEventListener("keydown", (e) => {
   if (e.key === "Enter") el("gateSubmit").click();
@@ -468,6 +483,7 @@ el("addQuestionBtn").onclick = () => {
 // --- Usage / paywall ---
 async function refreshUsage(){
   const res = await fetch(`${API_BASE}/api/usage`, { headers: apiHeaders(false) });
+  if (!res.ok) return; // not authorized yet (gate not passed) or rate-limited — nothing to show
   const data = await res.json();
   el("usageLabel").textContent = data.unlimited ? t("unlimited") : t("remaining", data.remaining);
   el("paywallPanel").style.display = (!data.unlimited && data.remaining === 0) ? "block" : "none";
