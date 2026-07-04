@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Keyform — Docx/PDF to QTI 2.2 Converter</title>
+<title>Keyform — Docx/PDF to QTI Converter</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Source+Serif+4:wght@600;700&family=Inter:wght@400;500;600&family=IBM+Plex+Mono:wght@500&display=swap" rel="stylesheet">
 <style>
@@ -15,7 +15,7 @@
   body{margin:0;background:var(--paper);color:var(--ink);font-family:'Inter',sans-serif;
     background-image:linear-gradient(var(--paper-line) 1px, transparent 1px);
     background-size:100% 2.1em;}
-  header{padding:2.5rem 1.5rem 1.5rem;text-align:center;background:transparent;}
+  header{padding:2.5rem 1.5rem 1.5rem;text-align:center;background:transparent;position:relative;}
   h1{font-family:'Source Serif 4',serif;font-size:2.1rem;margin:0 0 .3rem;letter-spacing:-.01em;}
   header p{color:var(--graphite);margin:0;font-size:.95rem;}
   main{max-width:880px;margin:0 auto;padding:0 1.5rem 4rem;}
@@ -43,30 +43,40 @@
   .choice-row{display:flex;align-items:center;gap:.5rem;margin:.25rem 0;}
   .remove{color:var(--stamp);background:none;border:none;cursor:pointer;font-size:.85rem;padding:.2rem;}
   .toolbar{display:flex;justify-content:space-between;align-items:center;margin-bottom:1rem;flex-wrap:wrap;gap:.6rem;}
-  .usage{font-size:.85rem;color:var(--graphite);font-family:'IBM Plex Mono',monospace;}
-  .license-row{display:flex;gap:.5rem;margin-top:1rem;flex-wrap:wrap;}
-  .license-row input{flex:1;min-width:200px;padding:.55rem .7rem;border:1px solid var(--paper-line);border-radius:6px;}
-  .paywall{border:1px solid var(--stamp);background:#FBF3EF;border-radius:8px;padding:1.4rem;text-align:center;}
-  .paywall h3{margin-top:0;font-family:'Source Serif 4',serif;}
-  .empty{color:var(--graphite);text-align:center;padding:2rem 0;font-size:.9rem;}
   .status{font-size:.85rem;color:var(--graphite);margin-top:.6rem;}
   .lang-switch{position:absolute;top:1.2rem;right:1.5rem;display:flex;gap:.3rem;}
   .lang-btn{background:transparent;border:1px solid var(--paper-line);color:var(--graphite);
     font-family:'IBM Plex Mono',monospace;font-size:.75rem;font-weight:600;padding:.3rem .6rem;
     border-radius:5px;cursor:pointer;}
   .lang-btn.active{background:var(--ink);color:#fff;border-color:var(--ink);}
-  header{position:relative;}
   .version-select{font-family:'IBM Plex Mono',monospace;font-size:.82rem;padding:.5rem .6rem;
     border:1px solid var(--paper-line);border-radius:6px;background:#fff;color:var(--ink);}
+  .empty{color:var(--graphite);text-align:center;padding:2rem 0;font-size:.9rem;}
+
+  /* Auth overlay */
   .gate-overlay{position:fixed;inset:0;background:rgba(27,39,64,0.55);display:none;
     align-items:center;justify-content:center;z-index:100;padding:1rem;}
-  .gate-box{background:#fff;border-radius:10px;padding:2rem;max-width:360px;width:100%;
+  .gate-box{background:#fff;border-radius:10px;padding:2rem;max-width:380px;width:100%;
     box-shadow:0 12px 40px rgba(0,0,0,0.25);}
   .gate-box h3{font-family:'Source Serif 4',serif;margin:0 0 .5rem;}
   .gate-box p{color:var(--graphite);font-size:.9rem;margin:0 0 1rem;}
   .gate-box input{width:100%;padding:.6rem .7rem;border:1px solid var(--paper-line);
     border-radius:6px;margin-bottom:.8rem;font-family:'Inter',sans-serif;}
   .gate-error{color:var(--stamp);font-size:.85rem;margin:-.4rem 0 .8rem;display:none;}
+  .gate-tabs{display:flex;gap:.4rem;margin-bottom:1.2rem;}
+  .gate-tab{flex:1;background:#F5F2E9;color:var(--graphite);border:1px solid var(--paper-line);}
+  .gate-tab.active{background:var(--ink);color:#fff;border-color:var(--ink);}
+
+  /* Account bar */
+  .account-bar{display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:.6rem;}
+  .account-bar .email{font-weight:600;}
+  .account-bar .balance{font-family:'IBM Plex Mono',monospace;font-size:.82rem;color:var(--graphite);}
+
+  /* Credit packs */
+  .packs{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:.8rem;margin-top:1rem;}
+  .pack{border:1px solid var(--paper-line);border-radius:8px;padding:1rem;text-align:center;}
+  .pack .qty{font-family:'Source Serif 4',serif;font-size:1.3rem;}
+  .pack .price{color:var(--graphite);font-size:.9rem;margin:.3rem 0 .8rem;}
 </style>
 </head>
 <body>
@@ -77,32 +87,27 @@
     <button class="lang-btn" id="langDe" type="button">DE</button>
   </div>
   <h1 data-i18n="title">Keyform</h1>
-  <p data-i18n="tagline">Turn a Word or PDF question set into a QTI 2.2 package, ready for your LMS.</p>
+  <p data-i18n="tagline">Turn a Word or PDF question set into a QTI package, ready for your LMS.</p>
 </header>
 
 <main>
+
+  <div class="panel">
+    <div class="account-bar">
+      <div>
+        <span class="email" id="accountEmail"></span>
+        <span class="balance" id="accountBalance"></span>
+      </div>
+      <button class="btn-ghost" id="logoutBtn" data-i18n="logoutBtn">Log out</button>
+    </div>
+  </div>
 
   <div class="panel">
     <strong data-i18n="formatHeading">Formatting your source file</strong>
     <p style="color:var(--graphite);font-size:.88rem;margin:.4rem 0 .8rem;" data-i18n="formatSub">
       Separate each question with a blank line. Keyform recognizes these patterns:
     </p>
-    <div class="convention" id="conventionBlock">1. What is the capital of France?
-*a) Paris
-b) London
-c) Berlin
-
-2. The sky is blue. (True/False)
-*True
-
-3. Match the following:
-A. Dog - 1. Bark
-B. Cat - 2. Meow
-
-4. The capital of Japan is ____.
-Answer: Tokyo
-
-5. Essay: Describe the causes of World War I.</div>
+    <div class="convention" id="conventionBlock"></div>
   </div>
 
   <div class="panel">
@@ -117,9 +122,6 @@ Answer: Tokyo
   <div class="panel" id="reviewPanel" style="display:none;">
     <div class="toolbar">
       <strong id="questionCount">0 questions</strong>
-      <div>
-        <span class="usage" id="usageLabel"></span>
-      </div>
     </div>
     <div id="cardList"></div>
     <div class="toolbar" style="margin-top:1rem;">
@@ -135,25 +137,45 @@ Answer: Tokyo
     <p class="status" id="exportStatus"></p>
   </div>
 
-  <div class="panel paywall" id="paywallPanel" style="display:none;">
-    <h3 data-i18n="paywallHeading">You've used your free exports</h3>
-    <p style="color:var(--graphite);" data-i18n="paywallSub">Unlock unlimited QTI exports for your account.</p>
-    <button class="btn-primary" id="upgradeBtn" data-i18n="upgradeBtn">Upgrade</button>
-    <div class="license-row">
-      <input type="text" id="licenseInput" data-i18n-placeholder="licensePlaceholder" placeholder="Already purchased? Paste your license key">
-      <button class="btn-ghost" id="saveLicenseBtn" data-i18n="saveLicenseBtn">Save key</button>
+  <div class="panel">
+    <strong data-i18n="packsHeading">Buy more questions</strong>
+    <p style="color:var(--graphite);font-size:.88rem;margin:.4rem 0 0;" data-i18n="packsSub">
+      Credits never expire and are used only once your free monthly quota (if any) runs out.
+    </p>
+    <div class="packs">
+      <div class="pack">
+        <div class="qty">50</div>
+        <div class="price" data-i18n="pack50Price">€8</div>
+        <button class="btn-ghost buy-btn" data-pack="50" data-i18n="buyBtn">Buy</button>
+      </div>
+      <div class="pack">
+        <div class="qty">100</div>
+        <div class="price" data-i18n="pack100Price">€15</div>
+        <button class="btn-ghost buy-btn" data-pack="100" data-i18n="buyBtn">Buy</button>
+      </div>
+      <div class="pack">
+        <div class="qty">200</div>
+        <div class="price" data-i18n="pack200Price">€25</div>
+        <button class="btn-ghost buy-btn" data-pack="200" data-i18n="buyBtn">Buy</button>
+      </div>
     </div>
+    <p class="status" id="buyStatus"></p>
   </div>
 
 </main>
 
 <div class="gate-overlay" id="gateOverlay">
   <div class="gate-box">
-    <h3 data-i18n="accessCodeTitle">Access code required</h3>
-    <p data-i18n="accessCodeSub">This tool is currently limited to invited users. Enter your access code to continue.</p>
-    <input type="text" id="gateInput" data-i18n-placeholder="accessCodePlaceholder" placeholder="Access code">
-    <p class="gate-error" id="gateError" data-i18n="accessCodeWrong">That code isn't correct — try again.</p>
-    <button class="btn-primary" id="gateSubmit" data-i18n="accessCodeSubmit" style="width:100%;">Continue</button>
+    <div class="gate-tabs">
+      <button class="gate-tab active" id="tabLogin" type="button" data-i18n="loginTab">Log in</button>
+      <button class="gate-tab" id="tabSignup" type="button" data-i18n="signupTab">Sign up</button>
+    </div>
+    <h3 id="gateTitle" data-i18n="loginTitle">Welcome back</h3>
+    <p id="gateSub" data-i18n="loginSub">Log in to convert your questions.</p>
+    <input type="email" id="authEmail" data-i18n-placeholder="emailPlaceholder" placeholder="Email">
+    <input type="password" id="authPassword" data-i18n-placeholder="passwordPlaceholder" placeholder="Password">
+    <p class="gate-error" id="gateError"></p>
+    <button class="btn-primary" id="authSubmit" style="width:100%;" data-i18n="loginSubmit">Log in</button>
   </div>
 </div>
 
@@ -167,7 +189,7 @@ const API_BASE = window.location.origin.includes("localhost")
 const translations = {
   en: {
     title: "Keyform",
-    tagline: "Turn a Word or PDF question set into a QTI 2.2 package, ready for your LMS.",
+    tagline: "Turn a Word or PDF question set into a QTI package, ready for your LMS.",
     formatHeading: "Formatting your source file",
     formatSub: "Separate each question with a blank line. Keyform recognizes these patterns:",
     convention: `1. What is the capital of France?
@@ -190,35 +212,44 @@ Answer: Tokyo
     chooseBtn: "Choose file",
     addQuestionBtn: "+ Add question manually",
     exportBtn: "Export QTI package",
-    paywallHeading: "You've used your free exports",
-    paywallSub: "Unlock unlimited QTI exports for your account.",
-    upgradeBtn: "Upgrade",
-    licensePlaceholder: "Already purchased? Paste your license key",
-    saveLicenseBtn: "Save key",
     reading: (name) => `Reading ${name} …`,
     parsed: (n, name) => `Parsed ${n} question(s) from ${name}.`,
     parseError: (msg) => `Error: ${msg}`,
     questionCount: (n) => `${n} question(s)`,
-    unlimited: "Unlimited exports (licensed)",
-    remaining: (n) => `${n} free export(s) left`,
     remove: "Remove",
     correctAnswerPlaceholder: "Correct answer",
     newQuestion: "New question",
     building: "Building QTI package …",
     downloaded: "Downloaded qti-package.zip",
     exportError: (msg) => `Error: ${msg}`,
-    emailPrompt: "Email for your receipt / license key:",
     checkoutError: "Could not start checkout.",
     rateLimited: "You've made a lot of requests in a short time — please wait a bit and try again.",
-    accessCodeTitle: "Access code required",
-    accessCodeSub: "This tool is currently limited to invited users. Enter your access code to continue.",
-    accessCodePlaceholder: "Access code",
-    accessCodeSubmit: "Continue",
-    accessCodeWrong: "That code isn't correct — try again.",
+    logoutBtn: "Log out",
+    loginTab: "Log in",
+    signupTab: "Sign up",
+    loginTitle: "Welcome back",
+    loginSub: "Log in to convert your questions.",
+    signupTitle: "Create your account",
+    signupSub: "Sign up to get free trial credits and start converting.",
+    emailPlaceholder: "Email",
+    passwordPlaceholder: "Password (min. 8 characters)",
+    loginSubmit: "Log in",
+    signupSubmit: "Sign up",
+    authError: "Something went wrong — check your details and try again.",
+    packsHeading: "Buy more questions",
+    packsSub: "Credits never expire and are used only once your free monthly quota (if any) runs out.",
+    pack50Price: "€8",
+    pack100Price: "€15",
+    pack200Price: "€25",
+    buyBtn: "Buy",
+    buying: "Redirecting to checkout …",
+    balanceUnlimited: "Unlimited (admin)",
+    balanceQuotaAndCredits: (quota, credits) => `${quota} free this month · ${credits} credit(s)`,
+    balanceCreditsOnly: (credits) => `${credits} credit(s)`,
   },
   de: {
     title: "Keyform",
-    tagline: "Verwandelt Word- oder PDF-Fragenkataloge in ein QTI-2.2-Paket für dein LMS.",
+    tagline: "Verwandelt Word- oder PDF-Fragenkataloge in ein QTI-Paket für dein LMS.",
     formatHeading: "So formatierst du deine Quelldatei",
     formatSub: "Trenne jede Frage mit einer Leerzeile. Keyform erkennt folgende Muster:",
     convention: `1. Was ist die Hauptstadt von Frankreich?
@@ -241,31 +272,40 @@ Antwort: Tokio
     chooseBtn: "Datei auswählen",
     addQuestionBtn: "+ Frage manuell hinzufügen",
     exportBtn: "QTI-Paket exportieren",
-    paywallHeading: "Deine kostenlosen Exporte sind aufgebraucht",
-    paywallSub: "Schalte unbegrenzte QTI-Exporte für dein Konto frei.",
-    upgradeBtn: "Upgrade",
-    licensePlaceholder: "Schon gekauft? Lizenzschlüssel hier einfügen",
-    saveLicenseBtn: "Schlüssel speichern",
     reading: (name) => `Lese ${name} …`,
     parsed: (n, name) => `${n} Frage(n) aus ${name} erkannt.`,
     parseError: (msg) => `Fehler: ${msg}`,
     questionCount: (n) => `${n} Frage(n)`,
-    unlimited: "Unbegrenzte Exporte (lizenziert)",
-    remaining: (n) => `${n} kostenlose(r) Export(e) übrig`,
     remove: "Entfernen",
     correctAnswerPlaceholder: "Richtige Antwort",
     newQuestion: "Neue Frage",
     building: "QTI-Paket wird erstellt …",
     downloaded: "qti-package.zip heruntergeladen",
     exportError: (msg) => `Fehler: ${msg}`,
-    emailPrompt: "E-Mail für Beleg / Lizenzschlüssel:",
     checkoutError: "Checkout konnte nicht gestartet werden.",
     rateLimited: "Du hast in kurzer Zeit sehr viele Anfragen gestellt — bitte warte kurz und versuche es erneut.",
-    accessCodeTitle: "Zugangscode erforderlich",
-    accessCodeSub: "Dieses Tool ist derzeit nur für eingeladene Nutzer freigegeben. Bitte gib deinen Zugangscode ein.",
-    accessCodePlaceholder: "Zugangscode",
-    accessCodeSubmit: "Weiter",
-    accessCodeWrong: "Dieser Code ist nicht korrekt — versuche es erneut.",
+    logoutBtn: "Abmelden",
+    loginTab: "Anmelden",
+    signupTab: "Registrieren",
+    loginTitle: "Willkommen zurück",
+    loginSub: "Melde dich an, um deine Fragen zu konvertieren.",
+    signupTitle: "Konto erstellen",
+    signupSub: "Registriere dich für kostenlose Test-Credits.",
+    emailPlaceholder: "E-Mail",
+    passwordPlaceholder: "Passwort (mind. 8 Zeichen)",
+    loginSubmit: "Anmelden",
+    signupSubmit: "Registrieren",
+    authError: "Etwas ist schiefgelaufen — überprüfe deine Angaben und versuche es erneut.",
+    packsHeading: "Mehr Fragen kaufen",
+    packsSub: "Credits verfallen nie und werden erst genutzt, wenn dein kostenloses Monatskontingent (falls vorhanden) aufgebraucht ist.",
+    pack50Price: "8 €",
+    pack100Price: "15 €",
+    pack200Price: "25 €",
+    buyBtn: "Kaufen",
+    buying: "Weiterleitung zur Kasse …",
+    balanceUnlimited: "Unbegrenzt (Admin)",
+    balanceQuotaAndCredits: (quota, credits) => `${quota} kostenlos diesen Monat · ${credits} Credit(s)`,
+    balanceCreditsOnly: (credits) => `${credits} Credit(s)`,
   },
 };
 
@@ -274,6 +314,10 @@ const t = (key, ...args) => {
   const val = translations[currentLang][key];
   return typeof val === "function" ? val(...args) : val;
 };
+
+const el = (id) => document.getElementById(id);
+let questions = [];
+let currentStatus = null; // last known {role, credits, unlimited, monthly_quota_limit, monthly_quota_remaining}
 
 function applyStaticTranslations(){
   document.querySelectorAll("[data-i18n]").forEach((elm) => {
@@ -287,7 +331,7 @@ function applyStaticTranslations(){
   el("langEn").classList.toggle("active", currentLang === "en");
   el("langDe").classList.toggle("active", currentLang === "de");
   if (questions.length) renderQuestions();
-  refreshUsage();
+  renderBalance();
 }
 
 function setLanguage(lang){
@@ -295,78 +339,105 @@ function setLanguage(lang){
   localStorage.setItem("qti_lang", lang);
   applyStaticTranslations();
 }
+el("langEn").onclick = () => setLanguage("en");
+el("langDe").onclick = () => setLanguage("de");
 
-let questions = [];
-
-const el = (id) => document.getElementById(id);
-const licenseKey = () => localStorage.getItem("qti_license") || "";
-const siteCode = () => localStorage.getItem("qti_site_code") || "";
-
+// --- Auth token / headers ---
+const authToken = () => localStorage.getItem("qti_token") || "";
 function apiHeaders(json=true){
   const h = {};
   if (json) h["Content-Type"] = "application/json";
-  const lk = licenseKey();
-  if (lk) h["X-License-Key"] = lk;
-  const sc = siteCode();
-  if (sc) h["X-Site-Code"] = sc;
+  const tok = authToken();
+  if (tok) h["Authorization"] = `Bearer ${tok}`;
   return h;
 }
 
-// Returns a friendly message for common gate/rate-limit failures, or null
-// if the response should be handled normally by the caller.
 async function checkGateErrors(res){
   if (res.status === 429) return t("rateLimited");
   if (res.status === 401){
-    localStorage.removeItem("qti_site_code");
-    showAccessCodeGate(true);
-    return t("accessCodeWrong");
+    localStorage.removeItem("qti_token");
+    showAuthGate("login");
+    return null; // gate reappears; no need for a separate message
   }
   return null;
 }
 
-// --- Access code gate ---
-async function initAccessGate(){
-  try{
-    const res = await fetch(`${API_BASE}/api/config`);
-    const data = await res.json();
-    if (data.access_code_required && !siteCode()){
-      showAccessCodeGate(false);
-    }
-  }catch(err){ /* if this fails, the API calls below will fail too and surface the error */ }
-}
-
-function showAccessCodeGate(wasWrong){
+// --- Auth gate (login/signup) ---
+let gateMode = "login";
+function showAuthGate(mode){
+  gateMode = mode;
   el("gateOverlay").style.display = "flex";
-  el("gateError").style.display = wasWrong ? "block" : "none";
+  el("gateError").style.display = "none";
+  el("tabLogin").classList.toggle("active", mode === "login");
+  el("tabSignup").classList.toggle("active", mode === "signup");
+  el("gateTitle").textContent = t(mode === "login" ? "loginTitle" : "signupTitle");
+  el("gateSub").textContent = t(mode === "login" ? "loginSub" : "signupSub");
+  el("authSubmit").textContent = t(mode === "login" ? "loginSubmit" : "signupSubmit");
 }
+el("tabLogin").onclick = () => showAuthGate("login");
+el("tabSignup").onclick = () => showAuthGate("signup");
 
-el("gateSubmit").onclick = async () => {
-  const val = el("gateInput").value.trim();
-  if (!val) return;
-  el("gateSubmit").disabled = true;
-  const previous = siteCode();
-  localStorage.setItem("qti_site_code", val);
+el("authSubmit").onclick = async () => {
+  const email = el("authEmail").value.trim();
+  const password = el("authPassword").value;
+  if (!email || !password) return;
+  el("authSubmit").disabled = true;
+  el("gateError").style.display = "none";
   try{
-    const res = await fetch(`${API_BASE}/api/usage`, { headers: apiHeaders(false) });
-    if (res.ok){
-      el("gateOverlay").style.display = "none";
-      refreshUsage();
-    } else {
-      if (previous) localStorage.setItem("qti_site_code", previous); else localStorage.removeItem("qti_site_code");
+    const endpoint = gateMode === "login" ? "/api/auth/login" : "/api/auth/signup";
+    const res = await fetch(`${API_BASE}${endpoint}`, {
+      method: "POST", headers: apiHeaders(), body: JSON.stringify({email, password}),
+    });
+    const data = await res.json();
+    if (!res.ok){
+      el("gateError").textContent = data.detail || t("authError");
       el("gateError").style.display = "block";
+      return;
     }
+    localStorage.setItem("qti_token", data.token);
+    currentStatus = data.status;
+    el("gateOverlay").style.display = "none";
+    el("authEmail").value = ""; el("authPassword").value = "";
+    el("accountEmail").textContent = email;
+    renderBalance();
   }catch(err){
+    el("gateError").textContent = t("authError");
     el("gateError").style.display = "block";
   }finally{
-    el("gateSubmit").disabled = false;
+    el("authSubmit").disabled = false;
   }
 };
-el("gateInput").addEventListener("keydown", (e) => {
-  if (e.key === "Enter") el("gateSubmit").click();
-});
+el("authPassword").addEventListener("keydown", (e) => { if (e.key === "Enter") el("authSubmit").click(); });
 
-el("langEn").onclick = () => setLanguage("en");
-el("langDe").onclick = () => setLanguage("de");
+el("logoutBtn").onclick = () => {
+  localStorage.removeItem("qti_token");
+  currentStatus = null;
+  questions = [];
+  renderQuestions();
+  showAuthGate("login");
+};
+
+function renderBalance(){
+  if (!currentStatus){ el("accountBalance").textContent = ""; return; }
+  if (currentStatus.unlimited){
+    el("accountBalance").textContent = " — " + t("balanceUnlimited");
+  } else if (currentStatus.monthly_quota_limit > 0){
+    el("accountBalance").textContent = " — " + t("balanceQuotaAndCredits", currentStatus.monthly_quota_remaining, currentStatus.credits);
+  } else {
+    el("accountBalance").textContent = " — " + t("balanceCreditsOnly", currentStatus.credits);
+  }
+}
+
+async function loadMe(){
+  try{
+    const res = await fetch(`${API_BASE}/api/me`, { headers: apiHeaders(false) });
+    if (!res.ok){ showAuthGate("login"); return; }
+    const data = await res.json();
+    currentStatus = data.status;
+    el("accountEmail").textContent = data.email;
+    renderBalance();
+  }catch(err){ showAuthGate("login"); }
+}
 
 // --- Upload ---
 el("chooseBtn").onclick = () => el("fileInput").click();
@@ -393,12 +464,12 @@ async function handleFile(file){
     const res = await fetch(`${API_BASE}/api/parse`, { method:"POST", body: formData, headers: apiHeaders(false) });
     const gateMsg = await checkGateErrors(res);
     if (gateMsg){ el("uploadStatus").textContent = gateMsg; return; }
+    if (res.status === 401) { el("uploadStatus").textContent = ""; return; }
     if(!res.ok) throw new Error((await res.json()).detail || "Parse failed");
     const data = await res.json();
     questions = data.questions;
     el("uploadStatus").textContent = t("parsed", data.count, file.name);
     renderQuestions();
-    refreshUsage();
   }catch(err){
     el("uploadStatus").textContent = t("parseError", err.message);
   }
@@ -480,32 +551,6 @@ el("addQuestionBtn").onclick = () => {
   renderQuestions();
 };
 
-// --- Usage / paywall ---
-async function refreshUsage(){
-  const res = await fetch(`${API_BASE}/api/usage`, { headers: apiHeaders(false) });
-  if (!res.ok) return; // not authorized yet (gate not passed) or rate-limited — nothing to show
-  const data = await res.json();
-  el("usageLabel").textContent = data.unlimited ? t("unlimited") : t("remaining", data.remaining);
-  el("paywallPanel").style.display = (!data.unlimited && data.remaining === 0) ? "block" : "none";
-}
-
-el("upgradeBtn").onclick = async () => {
-  const email = prompt(t("emailPrompt"));
-  try{
-    const res = await fetch(`${API_BASE}/api/create-checkout-session`, {
-      method:"POST", headers: apiHeaders(), body: JSON.stringify({email})
-    });
-    const data = await res.json();
-    if (data.url) window.location.href = data.url;
-    else alert(data.detail || t("checkoutError"));
-  }catch(err){ alert(t("exportError", err.message)); }
-};
-
-el("saveLicenseBtn").onclick = () => {
-  const key = el("licenseInput").value.trim();
-  if (key){ localStorage.setItem("qti_license", key); refreshUsage(); }
-};
-
 // --- Export ---
 const versionSelect = el("qtiVersion");
 versionSelect.value = localStorage.getItem("qti_version") || "2.2";
@@ -519,9 +564,10 @@ el("exportBtn").onclick = async () => {
     });
     const gateMsg = await checkGateErrors(res);
     if (gateMsg){ el("exportStatus").textContent = gateMsg; return; }
+    if (res.status === 401){ el("exportStatus").textContent = ""; return; }
     if (res.status === 402){
-      el("exportStatus").textContent = "";
-      refreshUsage();
+      const data = await res.json();
+      el("exportStatus").textContent = data.detail || "";
       return;
     }
     if (!res.ok) throw new Error((await res.json()).detail || "Export failed");
@@ -531,14 +577,34 @@ el("exportBtn").onclick = async () => {
     a.href = url; a.download = `qti-${versionSelect.value}-package.zip`; a.click();
     URL.revokeObjectURL(url);
     el("exportStatus").textContent = t("downloaded");
-    refreshUsage();
+    loadMe(); // refresh balance display after a successful charge
   }catch(err){
     el("exportStatus").textContent = t("exportError", err.message);
   }
 };
 
+// --- Credit packs ---
+document.querySelectorAll(".buy-btn").forEach((btn) => {
+  btn.onclick = async () => {
+    const pack = btn.getAttribute("data-pack");
+    el("buyStatus").textContent = t("buying");
+    try{
+      const res = await fetch(`${API_BASE}/api/create-checkout-session`, {
+        method:"POST", headers: apiHeaders(), body: JSON.stringify({pack}),
+      });
+      const gateMsg = await checkGateErrors(res);
+      if (gateMsg){ el("buyStatus").textContent = gateMsg; return; }
+      const data = await res.json();
+      if (data.url) window.location.href = data.url;
+      else { el("buyStatus").textContent = data.detail || t("checkoutError"); }
+    }catch(err){
+      el("buyStatus").textContent = t("checkoutError");
+    }
+  };
+});
+
 applyStaticTranslations();
-initAccessGate();
+if (authToken()) loadMe(); else showAuthGate("login");
 </script>
 </body>
 </html>

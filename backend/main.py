@@ -1,28 +1,29 @@
 import os
-from fastapi import FastAPI, UploadFile, File, Request, Header, HTTPException, Response, Depends
-from fastapi.middleware.cors import CORSMiddleware
-from fastapi.responses import JSONResponse, StreamingResponse
-from itsdangerous import URLSafeSerializer, BadSignature
+import re
 import io
+from fastapi import FastAPI, UploadFile, File, Request, Header, HTTPException, Depends
+from fastapi.middleware.cors import CORSMiddleware
+from fastapi.responses import StreamingResponse
 
 from extract import extract_text
 from parser import parse_questions
 from qti_generator import build_qti_package
 from ratelimit import rate_limit
+import db
+import auth
 import billing
 
-FREE_LIMIT = int(os.environ.get("FREE_EXPORT_LIMIT", "3"))
-COOKIE_SECRET = os.environ.get("COOKIE_SECRET", "dev-secret-change-me")
-COOKIE_NAME = "qti_usage"
 MAX_UPLOAD_MB = int(os.environ.get("MAX_UPLOAD_MB", "10"))
-SITE_ACCESS_CODE = os.environ.get("SITE_ACCESS_CODE", "")
 
 # Tune these via Railway env vars if you need to loosen/tighten them later
 RATE_LIMIT_PARSE = int(os.environ.get("RATE_LIMIT_PARSE", "20"))     # per hour, per visitor
 RATE_LIMIT_EXPORT = int(os.environ.get("RATE_LIMIT_EXPORT", "15"))   # per hour, per visitor
+RATE_LIMIT_AUTH = int(os.environ.get("RATE_LIMIT_AUTH", "10"))       # per hour, per visitor (signup/login)
 RATE_LIMIT_WINDOW = 60 * 60
 
-serializer = URLSafeSerializer(COOKIE_SECRET)
+EMAIL_RE = re.compile(r"^[^@\s]+@[^@\s]+\.[^@\s]+$")
+
+db.init_db()
 
 app = FastAPI(title="Doc-to-QTI API")
 
@@ -34,31 +35,23 @@ app.add_middleware(
 )
 
 
-def _read_usage(request: Request) -> int:
-    raw = request.cookies.get(COOKIE_NAME)
-    if not raw:
-        return 0
-    try:
-        return int(serializer.loads(raw))
-    except BadSignature:
-        return 0
+def get_current_user(authorization: str = Header(default=None)):
+    if not authorization or not authorization.startswith("Bearer "):
+        raise HTTPException(401, "Please log in to continue.")
+    token = authorization.removeprefix("Bearer ").strip()
+    user_id = auth.decode_token(token)
+    if user_id is None:
+        raise HTTPException(401, "Your session has expired — please log in again.")
+    user = db.get_user_by_id(user_id)
+    if not user:
+        raise HTTPException(401, "Account not found — please log in again.")
+    return user
 
 
-def _write_usage(response: Response, count: int):
-    response.set_cookie(
-        COOKIE_NAME,
-        serializer.dumps(str(count)),
-        max_age=60 * 60 * 24 * 365,
-        httponly=True,
-        samesite="lax",
-    )
-
-
-def require_site_code(x_site_code: str = Header(default=None)):
-    """No-op unless SITE_ACCESS_CODE is set on Railway — lets you keep the
-    app fully open, or lock it to only people you've shared the code with."""
-    if SITE_ACCESS_CODE and x_site_code != SITE_ACCESS_CODE:
-        raise HTTPException(401, "Missing or incorrect access code.")
+def require_admin(user=Depends(get_current_user)):
+    if user["role"] != "admin":
+        raise HTTPException(403, "Admin access only.")
+    return user
 
 
 @app.get("/api/health")
@@ -66,18 +59,53 @@ def health():
     return {"status": "ok"}
 
 
-@app.get("/api/config")
-def get_config():
-    """Public info the frontend needs before it can call the protected
-    endpoints — just whether a code is required, never the code itself."""
-    return {"access_code_required": bool(SITE_ACCESS_CODE)}
+# --- Auth ---
 
+@app.post("/api/auth/signup", dependencies=[
+    Depends(rate_limit("auth", RATE_LIMIT_AUTH, RATE_LIMIT_WINDOW)),
+])
+def signup(body: dict):
+    email = (body or {}).get("email", "").strip()
+    password = (body or {}).get("password", "")
+
+    if not EMAIL_RE.match(email):
+        raise HTTPException(400, "Please enter a valid email address.")
+    if len(password) < 8:
+        raise HTTPException(400, "Password must be at least 8 characters.")
+    if db.get_user_by_email(email):
+        raise HTTPException(409, "An account with that email already exists — try logging in instead.")
+
+    user_id = db.create_user(email, auth.hash_password(password), role="standard")
+    token = auth.create_token(user_id)
+    return {"token": token, "status": db.get_status(user_id)}
+
+
+@app.post("/api/auth/login", dependencies=[
+    Depends(rate_limit("auth", RATE_LIMIT_AUTH, RATE_LIMIT_WINDOW)),
+])
+def login(body: dict):
+    email = (body or {}).get("email", "").strip()
+    password = (body or {}).get("password", "")
+
+    user = db.get_user_by_email(email)
+    if not user or not auth.verify_password(password, user["password_hash"]):
+        raise HTTPException(401, "Incorrect email or password.")
+
+    token = auth.create_token(user["id"])
+    return {"token": token, "status": db.get_status(user["id"])}
+
+
+@app.get("/api/me")
+def me(user=Depends(get_current_user)):
+    return {"email": user["email"], "status": db.get_status(user["id"])}
+
+
+# --- Core conversion features ---
 
 @app.post("/api/parse", dependencies=[
-    Depends(require_site_code),
     Depends(rate_limit("parse", RATE_LIMIT_PARSE, RATE_LIMIT_WINDOW)),
 ])
-async def parse_file(file: UploadFile = File(...)):
+async def parse_file(file: UploadFile = File(...), user=Depends(get_current_user)):
     contents = await file.read()
     if len(contents) > MAX_UPLOAD_MB * 1024 * 1024:
         raise HTTPException(413, f"File too large (max {MAX_UPLOAD_MB} MB).")
@@ -90,14 +118,9 @@ async def parse_file(file: UploadFile = File(...)):
 
 
 @app.post("/api/export", dependencies=[
-    Depends(require_site_code),
     Depends(rate_limit("export", RATE_LIMIT_EXPORT, RATE_LIMIT_WINDOW)),
 ])
-async def export_qti(
-    request: Request,
-    response: Response,
-    x_license_key: str = Header(default=None),
-):
+async def export_qti(request: Request, user=Depends(get_current_user)):
     body = await request.json()
     questions = body.get("questions", [])
     version = body.get("qti_version", "2.2")
@@ -106,19 +129,11 @@ async def export_qti(
     if not questions:
         raise HTTPException(400, "No questions provided.")
 
-    has_license = billing.is_license_valid(x_license_key)
-    usage = _read_usage(request)
-
-    if not has_license and usage >= FREE_LIMIT:
-        raise HTTPException(
-            402,
-            "Free export limit reached. Upgrade to keep exporting QTI packages.",
-        )
+    allowed, info = db.charge_export(user["id"], len(questions))
+    if not allowed:
+        raise HTTPException(402, info)
 
     zip_bytes = build_qti_package(questions, version=version)
-
-    if not has_license:
-        _write_usage(response, usage + 1)
 
     return StreamingResponse(
         io.BytesIO(zip_bytes),
@@ -127,26 +142,16 @@ async def export_qti(
     )
 
 
-@app.get("/api/usage", dependencies=[Depends(require_site_code)])
-def get_usage(request: Request, x_license_key: str = Header(default=None)):
-    has_license = billing.is_license_valid(x_license_key)
-    usage = _read_usage(request)
-    return {
-        "used": usage,
-        "limit": FREE_LIMIT,
-        "unlimited": has_license,
-        "remaining": None if has_license else max(0, FREE_LIMIT - usage),
-    }
-
+# --- Billing ---
 
 @app.post("/api/create-checkout-session", dependencies=[
     Depends(rate_limit("checkout", 10, RATE_LIMIT_WINDOW)),
 ])
-def create_checkout_session(body: dict = None):
-    email = (body or {}).get("email")
+def create_checkout_session(body: dict, user=Depends(get_current_user)):
+    pack = (body or {}).get("pack", "")
     try:
-        url = billing.create_checkout_session(customer_email=email)
-    except RuntimeError as e:
+        url = billing.create_checkout_session(user["id"], pack)
+    except (RuntimeError, ValueError) as e:
         raise HTTPException(400, str(e))
     return {"url": url}
 
@@ -159,3 +164,10 @@ async def stripe_webhook(request: Request, stripe_signature: str = Header(defaul
     except Exception as e:
         raise HTTPException(400, f"Webhook error: {e}")
     return {"received": True}
+
+
+# --- Admin ---
+
+@app.get("/api/admin/users")
+def admin_list_users(admin=Depends(require_admin)):
+    return {"users": db.list_users()}
