@@ -206,3 +206,16 @@ def setup_create_account(body: dict, x_setup_secret: str = Header(default=None))
     user = db.get_user_by_id(user_id)
     user.pop("password_hash", None)
     return {"created": True, "user": user}
+
+
+@app.post("/api/setup/delete-account")
+def setup_delete_account(body: dict, x_setup_secret: str = Header(default=None)):
+    """For fixing mistakes (e.g. an account created with placeholder/wrong
+    details) — not exposed anywhere in the UI, deliberately."""
+    if not SETUP_SECRET or x_setup_secret != SETUP_SECRET:
+        raise HTTPException(403, "Setup is disabled or the secret is wrong.")
+    email = (body or {}).get("email", "").strip()
+    if not email:
+        raise HTTPException(400, "email is required.")
+    deleted = db.delete_user_by_email(email)
+    return {"deleted": deleted}

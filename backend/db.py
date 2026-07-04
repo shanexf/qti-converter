@@ -179,6 +179,12 @@ def charge_export(user_id: int, question_count: int):
         return True, f"charged {from_quota} from monthly quota, {from_credits} from credits"
 
 
+def delete_user_by_email(email: str) -> bool:
+    with get_conn() as conn:
+        cur = conn.execute("DELETE FROM users WHERE email = ?", (email.lower().strip(),))
+        return cur.rowcount > 0
+
+
 def add_credits(user_id: int, amount: int, pack: str, stripe_session_id: str) -> bool:
     """Idempotent: if this Stripe session was already processed (e.g. a
     webhook retry), this is a no-op and returns False."""
