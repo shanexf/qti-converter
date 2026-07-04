@@ -171,3 +171,38 @@ async def stripe_webhook(request: Request, stripe_signature: str = Header(defaul
 @app.get("/api/admin/users")
 def admin_list_users(admin=Depends(require_admin)):
     return {"users": db.list_users()}
+
+
+# --- One-time account setup (for creating admin/free_monthly accounts on the
+# live server, since `railway run` executes locally, not inside the actual
+# container where the database volume lives) ---
+
+SETUP_SECRET = os.environ.get("SETUP_SECRET", "")
+
+
+@app.post("/api/setup/create-account")
+def setup_create_account(body: dict, x_setup_secret: str = Header(default=None)):
+    if not SETUP_SECRET or x_setup_secret != SETUP_SECRET:
+        raise HTTPException(403, "Setup is disabled or the secret is wrong.")
+
+    email = (body or {}).get("email", "").strip()
+    password = (body or {}).get("password", "")
+    role = (body or {}).get("role", "standard")
+    monthly_quota_limit = int((body or {}).get("monthly_quota_limit", 0))
+
+    if not EMAIL_RE.match(email):
+        raise HTTPException(400, "Please provide a valid email address.")
+    if len(password) < 8:
+        raise HTTPException(400, "Password must be at least 8 characters.")
+    if role not in ("admin", "free_monthly", "standard"):
+        raise HTTPException(400, "role must be admin, free_monthly, or standard.")
+    if db.get_user_by_email(email):
+        raise HTTPException(409, "An account with that email already exists.")
+
+    user_id = db.create_user(
+        email, auth.hash_password(password), role=role,
+        monthly_quota_limit=monthly_quota_limit,
+    )
+    user = db.get_user_by_id(user_id)
+    user.pop("password_hash", None)
+    return {"created": True, "user": user}
