@@ -44,6 +44,14 @@ def _current_period() -> str:
     return datetime.datetime.utcnow().strftime("%Y-%m")
 
 
+def _ensure_column(conn, table: str, column: str, column_def: str):
+    """Adds a column if it doesn't already exist — safe to call on a fresh
+    database or one that already has real accounts in it (e.g. production)."""
+    existing = [row[1] for row in conn.execute(f"PRAGMA table_info({table})").fetchall()]
+    if column not in existing:
+        conn.execute(f"ALTER TABLE {table} ADD COLUMN {column} {column_def}")
+
+
 def init_db():
     with get_conn() as conn:
         conn.execute("""
@@ -56,9 +64,19 @@ def init_db():
                 monthly_quota_limit INTEGER NOT NULL DEFAULT 0,
                 monthly_quota_used INTEGER NOT NULL DEFAULT 0,
                 monthly_quota_period TEXT NOT NULL DEFAULT '',
+                full_name TEXT NOT NULL DEFAULT '',
+                phone TEXT NOT NULL DEFAULT '',
+                occupation TEXT NOT NULL DEFAULT '',
+                institution TEXT NOT NULL DEFAULT '',
+                marketing_consent INTEGER NOT NULL DEFAULT 0,
+                privacy_accepted INTEGER NOT NULL DEFAULT 0,
                 created_at REAL NOT NULL
             )
         """)
+        # Added after the initial release — safe on both fresh and existing databases
+        _ensure_column(conn, "users", "country", "TEXT NOT NULL DEFAULT ''")
+        _ensure_column(conn, "users", "bundesland", "TEXT NOT NULL DEFAULT ''")
+
         conn.execute("""
             CREATE TABLE IF NOT EXISTS credit_purchases (
                 id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -73,15 +91,22 @@ def init_db():
 
 
 def create_user(email: str, password_hash: str, role: str = "standard",
-                 credits: int = None, monthly_quota_limit: int = 0):
+                 credits: int = None, monthly_quota_limit: int = 0,
+                 full_name: str = "", phone: str = "", country: str = "",
+                 bundesland: str = "", occupation: str = "", institution: str = "",
+                 marketing_consent: bool = False, privacy_accepted: bool = False):
     if credits is None:
         credits = SIGNUP_FREE_CREDITS if role == "standard" else 0
     with get_conn() as conn:
         cur = conn.execute(
             "INSERT INTO users (email, password_hash, role, credits, monthly_quota_limit, "
-            "monthly_quota_used, monthly_quota_period, created_at) VALUES (?, ?, ?, ?, ?, 0, ?, ?)",
+            "monthly_quota_used, monthly_quota_period, full_name, phone, country, bundesland, "
+            "occupation, institution, marketing_consent, privacy_accepted, created_at) "
+            "VALUES (?, ?, ?, ?, ?, 0, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
             (email.lower().strip(), password_hash, role, credits, monthly_quota_limit,
-             _current_period(), time.time()),
+             _current_period(), full_name.strip(), phone.strip(), country.strip(),
+             bundesland.strip(), occupation, institution.strip(), int(bool(marketing_consent)),
+             int(bool(privacy_accepted)), time.time()),
         )
         return cur.lastrowid
 
@@ -104,7 +129,8 @@ def list_users():
     with get_conn() as conn:
         rows = conn.execute(
             "SELECT id, email, role, credits, monthly_quota_limit, monthly_quota_used, "
-            "monthly_quota_period, created_at FROM users ORDER BY created_at"
+            "monthly_quota_period, full_name, phone, country, bundesland, occupation, "
+            "institution, marketing_consent, created_at FROM users ORDER BY created_at"
         ).fetchall()
         return [dict(r) for r in rows]
 

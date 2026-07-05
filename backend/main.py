@@ -67,15 +67,40 @@ def health():
 def signup(body: dict):
     email = (body or {}).get("email", "").strip()
     password = (body or {}).get("password", "")
+    full_name = (body or {}).get("full_name", "").strip()
+    phone = (body or {}).get("phone", "").strip()
+    country = (body or {}).get("country", "").strip()
+    bundesland = (body or {}).get("bundesland", "").strip()
+    occupation = (body or {}).get("occupation", "").strip()
+    institution = (body or {}).get("institution", "").strip()
+    marketing_consent = bool((body or {}).get("marketing_consent", False))
+    privacy_accepted = bool((body or {}).get("privacy_accepted", False))
 
     if not EMAIL_RE.match(email):
         raise HTTPException(400, "Please enter a valid email address.")
     if len(password) < 8:
         raise HTTPException(400, "Password must be at least 8 characters.")
+    if not full_name:
+        raise HTTPException(400, "Please enter your name.")
+    if not country:
+        raise HTTPException(400, "Please select your country.")
+    if country == "Germany" and not bundesland:
+        raise HTTPException(400, "Please select your Bundesland.")
+    if occupation not in ("teacher", "student", "other"):
+        raise HTTPException(400, "Please select whether you're a teacher, student, or other.")
+    if occupation in ("teacher", "student") and not institution:
+        raise HTTPException(400, "Please enter your school, university, or training college.")
+    if not privacy_accepted:
+        raise HTTPException(400, "You must accept the privacy policy to sign up.")
     if db.get_user_by_email(email):
         raise HTTPException(409, "An account with that email already exists — try logging in instead.")
 
-    user_id = db.create_user(email, auth.hash_password(password), role="standard")
+    user_id = db.create_user(
+        email, auth.hash_password(password), role="standard",
+        full_name=full_name, phone=phone, country=country, bundesland=bundesland,
+        occupation=occupation, institution=institution,
+        marketing_consent=marketing_consent, privacy_accepted=privacy_accepted,
+    )
     token = auth.create_token(user_id)
     return {"token": token, "status": db.get_status(user_id)}
 

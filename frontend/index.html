@@ -65,6 +65,8 @@
   .gate-box p{color:var(--graphite);font-size:.9rem;margin:0 0 1rem;}
   .gate-box input{width:100%;padding:.6rem .7rem;border:1px solid var(--paper-line);
     border-radius:6px;margin-bottom:.8rem;font-family:'Inter',sans-serif;}
+  .gate-box select{width:100%;padding:.6rem .7rem;border:1px solid var(--paper-line);
+    border-radius:6px;margin-bottom:.8rem;font-family:'Inter',sans-serif;background:#fff;color:var(--ink);}
   .gate-error{color:var(--stamp);font-size:.85rem;margin:-.4rem 0 .8rem;display:none;}
   .gate-tabs{display:flex;gap:.4rem;margin-bottom:1.2rem;}
   .gate-tab{flex:1;background:#F5F2E9;color:var(--graphite);border:1px solid var(--paper-line);}
@@ -100,6 +102,14 @@
   .price-preview .tier{text-align:center;}
   .price-preview .tier .qty{font-family:'Source Serif 4',serif;font-size:1.2rem;}
   .price-preview .tier .price{color:var(--graphite);font-size:.85rem;}
+
+  /* Cookie banner */
+  .cookie-banner{position:fixed;bottom:0;left:0;right:0;background:var(--ink);color:#fff;
+    padding:1rem 1.5rem;display:flex;justify-content:space-between;align-items:center;
+    flex-wrap:wrap;gap:1rem;z-index:90;box-shadow:0 -4px 18px rgba(0,0,0,0.2);}
+  .cookie-banner p{margin:0;font-size:.85rem;max-width:640px;color:#E4DECD;}
+  .cookie-actions{display:flex;gap:.6rem;flex-shrink:0;}
+  .cookie-banner .btn-ghost{color:#fff;border-color:rgba(255,255,255,0.3);}
 </style>
 </head>
 <body>
@@ -258,6 +268,51 @@
     <p id="gateSub" data-i18n="loginSub">Log in to convert your questions.</p>
     <input type="email" id="authEmail" data-i18n-placeholder="emailPlaceholder" placeholder="Email">
     <input type="password" id="authPassword" data-i18n-placeholder="passwordPlaceholder" placeholder="Password">
+    <div id="signupExtraFields" class="hidden">
+      <input type="text" id="authFullName" data-i18n-placeholder="fullNamePlaceholder" placeholder="Full name">
+      <input type="tel" id="authPhone" data-i18n-placeholder="phonePlaceholder" placeholder="Phone (optional)">
+      <select id="authOccupation">
+        <option value="" data-i18n="occupationSelectPlaceholder">I am a…</option>
+        <option value="teacher" data-i18n="occupationTeacher">Teacher</option>
+        <option value="student" data-i18n="occupationStudent">Student</option>
+        <option value="other" data-i18n="occupationOther">Other</option>
+      </select>
+      <input type="text" id="authInstitution" class="hidden" data-i18n-placeholder="institutionPlaceholder" placeholder="School / university / training college">
+      <select id="authCountry">
+        <option value="" data-i18n="countrySelectPlaceholder">Country…</option>
+        <option value="Germany">Germany</option>
+        <option value="Austria">Austria</option>
+        <option value="Switzerland">Switzerland</option>
+        <option value="Other" data-i18n="countryOther">Other</option>
+      </select>
+      <select id="authBundesland" class="hidden">
+        <option value="" data-i18n="bundeslandSelectPlaceholder">Bundesland…</option>
+        <option value="Baden-Württemberg">Baden-Württemberg</option>
+        <option value="Bayern">Bayern</option>
+        <option value="Berlin">Berlin</option>
+        <option value="Brandenburg">Brandenburg</option>
+        <option value="Bremen">Bremen</option>
+        <option value="Hamburg">Hamburg</option>
+        <option value="Hessen">Hessen</option>
+        <option value="Mecklenburg-Vorpommern">Mecklenburg-Vorpommern</option>
+        <option value="Niedersachsen">Niedersachsen</option>
+        <option value="Nordrhein-Westfalen">Nordrhein-Westfalen</option>
+        <option value="Rheinland-Pfalz">Rheinland-Pfalz</option>
+        <option value="Saarland">Saarland</option>
+        <option value="Sachsen">Sachsen</option>
+        <option value="Sachsen-Anhalt">Sachsen-Anhalt</option>
+        <option value="Schleswig-Holstein">Schleswig-Holstein</option>
+        <option value="Thüringen">Thüringen</option>
+      </select>
+      <label style="display:flex;align-items:flex-start;gap:.5rem;font-size:.82rem;color:var(--graphite);margin-bottom:.6rem;">
+        <input type="checkbox" id="authPrivacyAccepted" style="width:auto;margin:.2rem 0 0;">
+        <span data-i18n="privacyAcceptLabel">I have read and accept the privacy policy.</span>
+      </label>
+      <label style="display:flex;align-items:flex-start;gap:.5rem;font-size:.82rem;color:var(--graphite);margin-bottom:.8rem;">
+        <input type="checkbox" id="authMarketingConsent" style="width:auto;margin:.2rem 0 0;">
+        <span data-i18n="marketingConsentLabel">I'd like to receive occasional emails about Keyform updates (optional).</span>
+      </label>
+    </div>
     <p class="gate-error" id="gateError"></p>
     <button class="btn-primary" id="authSubmit" style="width:100%;" data-i18n="loginSubmit">Log in</button>
     <p style="text-align:center;margin-top:1rem;">
@@ -348,6 +403,22 @@ Answer: Tokyo
     signupSubmit: "Sign up",
     authError: "Something went wrong — check your details and try again.",
     closeGateBtn: "Cancel",
+    fullNamePlaceholder: "Full name",
+    phonePlaceholder: "Phone (optional)",
+    institutionPlaceholder: "School / university / training college",
+    countrySelectPlaceholder: "Country…",
+    countryOther: "Other",
+    bundeslandSelectPlaceholder: "Bundesland…",
+    occupationSelectPlaceholder: "I am a…",
+    occupationTeacher: "Teacher",
+    occupationStudent: "Student",
+    occupationOther: "Other",
+    privacyAcceptLabel: "I have read and accept the privacy policy.",
+    marketingConsentLabel: "I'd like to receive occasional emails about Keyform updates (optional).",
+    signupValidationError: "Please fill in your name, country (and Bundesland if in Germany), choose teacher/student/other, and accept the privacy policy.",
+    cookieBannerText: "We use essential cookies/local storage to keep you logged in. We'd also like your OK to use analytics later to improve Keyform.",
+    cookieNecessaryBtn: "Necessary only",
+    cookieAcceptBtn: "Accept all",
     packsHeading: "Buy more questions",
     packsSub: "Credits never expire and are used only once your free monthly quota (if any) runs out.",
     pack50Price: "€8",
@@ -430,6 +501,22 @@ Antwort: Tokio
     signupSubmit: "Registrieren",
     authError: "Etwas ist schiefgelaufen — überprüfe deine Angaben und versuche es erneut.",
     closeGateBtn: "Abbrechen",
+    fullNamePlaceholder: "Vollständiger Name",
+    phonePlaceholder: "Telefon (optional)",
+    institutionPlaceholder: "Schule / Universität / Ausbildungsstätte",
+    countrySelectPlaceholder: "Land…",
+    countryOther: "Sonstiges",
+    bundeslandSelectPlaceholder: "Bundesland…",
+    occupationSelectPlaceholder: "Ich bin…",
+    occupationTeacher: "Lehrer/in",
+    occupationStudent: "Schüler/in oder Student/in",
+    occupationOther: "Sonstiges",
+    privacyAcceptLabel: "Ich habe die Datenschutzerklärung gelesen und akzeptiere sie.",
+    marketingConsentLabel: "Ich möchte gelegentlich E-Mails zu Keyform-Updates erhalten (optional).",
+    signupValidationError: "Bitte gib deinen Namen, dein Land (und Bundesland, falls Deutschland) ein, wähle Lehrer/Schüler/Sonstiges, und akzeptiere die Datenschutzerklärung.",
+    cookieBannerText: "Wir verwenden essenzielle Cookies/lokalen Speicher, um dich angemeldet zu halten. Wir würden gerne später auch Analyse-Tools nutzen, um Keyform zu verbessern — dafür bräuchten wir dein OK.",
+    cookieNecessaryBtn: "Nur Notwendiges",
+    cookieAcceptBtn: "Alle akzeptieren",
     packsHeading: "Mehr Fragen kaufen",
     packsSub: "Credits verfallen nie und werden erst genutzt, wenn dein kostenloses Monatskontingent (falls vorhanden) aufgebraucht ist.",
     pack50Price: "8 €",
@@ -526,21 +613,54 @@ function showAuthGate(mode){
   el("gateTitle").textContent = t(mode === "login" ? "loginTitle" : "signupTitle");
   el("gateSub").textContent = t(mode === "login" ? "loginSub" : "signupSub");
   el("authSubmit").textContent = t(mode === "login" ? "loginSubmit" : "signupSubmit");
+  el("signupExtraFields").classList.toggle("hidden", mode !== "signup");
 }
 el("tabLogin").onclick = () => showAuthGate("login");
 el("tabSignup").onclick = () => showAuthGate("signup");
 el("closeGateBtn").onclick = () => { el("gateOverlay").style.display = "none"; };
 
+el("authOccupation").onchange = () => {
+  const needsInstitution = ["teacher","student"].includes(el("authOccupation").value);
+  el("authInstitution").classList.toggle("hidden", !needsInstitution);
+};
+el("authCountry").onchange = () => {
+  el("authBundesland").classList.toggle("hidden", el("authCountry").value !== "Germany");
+};
+
 el("authSubmit").onclick = async () => {
   const email = el("authEmail").value.trim();
   const password = el("authPassword").value;
   if (!email || !password) return;
+
+  let body = {email, password};
+  if (gateMode === "signup"){
+    const full_name = el("authFullName").value.trim();
+    const occupation = el("authOccupation").value;
+    const institution = el("authInstitution").value.trim();
+    const country = el("authCountry").value;
+    const bundesland = el("authBundesland").value;
+    const privacy_accepted = el("authPrivacyAccepted").checked;
+    const needsInstitution = ["teacher","student"].includes(occupation);
+    const needsBundesland = country === "Germany";
+    if (!full_name || !occupation || !country || (needsInstitution && !institution) || (needsBundesland && !bundesland) || !privacy_accepted){
+      el("gateError").textContent = t("signupValidationError");
+      el("gateError").style.display = "block";
+      return;
+    }
+    body = {
+      ...body, full_name, occupation, institution, country, bundesland,
+      phone: el("authPhone").value.trim(),
+      privacy_accepted,
+      marketing_consent: el("authMarketingConsent").checked,
+    };
+  }
+
   el("authSubmit").disabled = true;
   el("gateError").style.display = "none";
   try{
     const endpoint = gateMode === "login" ? "/api/auth/login" : "/api/auth/signup";
     const res = await fetch(`${API_BASE}${endpoint}`, {
-      method: "POST", headers: apiHeaders(), body: JSON.stringify({email, password}),
+      method: "POST", headers: apiHeaders(), body: JSON.stringify(body),
     });
     const data = await res.json();
     if (!res.ok){
@@ -796,6 +916,29 @@ document.querySelectorAll(".buy-btn").forEach((btn) => {
 
 applyStaticTranslations();
 if (authToken()) loadMe(); else showView("landing");
+
+// --- Cookie consent banner ---
+function initCookieBanner(){
+  const consent = localStorage.getItem("qti_cookie_consent");
+  if (!consent) el("cookieBanner").classList.remove("hidden");
+}
+el("cookieAcceptBtn").onclick = () => {
+  localStorage.setItem("qti_cookie_consent", "all");
+  el("cookieBanner").classList.add("hidden");
+};
+el("cookieNecessaryBtn").onclick = () => {
+  localStorage.setItem("qti_cookie_consent", "necessary");
+  el("cookieBanner").classList.add("hidden");
+};
+initCookieBanner();
 </script>
+<div class="cookie-banner hidden" id="cookieBanner">
+  <p data-i18n="cookieBannerText">We use essential cookies/local storage to keep you logged in. We'd also like your OK to use analytics later to improve Keyform.</p>
+  <div class="cookie-actions">
+    <button class="btn-ghost" id="cookieNecessaryBtn" data-i18n="cookieNecessaryBtn">Necessary only</button>
+    <button class="btn-primary" id="cookieAcceptBtn" data-i18n="cookieAcceptBtn">Accept all</button>
+  </div>
+</div>
+
 </body>
 </html>
