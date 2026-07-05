@@ -32,6 +32,8 @@
   .btn-primary:hover{background:#101a30;}
   .btn-primary:disabled{background:#9aa3b3;cursor:not-allowed;}
   .btn-ghost{background:transparent;color:var(--ink);border:1px solid var(--paper-line);}
+  .btn-link{background:none;border:none;color:var(--ink);text-decoration:underline;cursor:pointer;
+    font-size:.85rem;padding:0;font-weight:600;}
   .badge{display:inline-block;font-family:'IBM Plex Mono',monospace;font-size:.68rem;
     font-weight:600;letter-spacing:.03em;color:#fff;background:var(--stamp);
     padding:.2rem .5rem;border-radius:4px;transform:rotate(-2deg);}
@@ -52,6 +54,7 @@
   .version-select{font-family:'IBM Plex Mono',monospace;font-size:.82rem;padding:.5rem .6rem;
     border:1px solid var(--paper-line);border-radius:6px;background:#fff;color:var(--ink);}
   .empty{color:var(--graphite);text-align:center;padding:2rem 0;font-size:.9rem;}
+  .hidden{display:none !important;}
 
   /* Auth overlay */
   .gate-overlay{position:fixed;inset:0;background:rgba(27,39,64,0.55);display:none;
@@ -71,12 +74,32 @@
   .account-bar{display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:.6rem;}
   .account-bar .email{font-weight:600;}
   .account-bar .balance{font-family:'IBM Plex Mono',monospace;font-size:.82rem;color:var(--graphite);}
+  .account-actions{display:flex;gap:.8rem;align-items:center;flex-wrap:wrap;}
 
-  /* Credit packs */
+  /* Buy banner (inside the app view) */
+  .buy-banner{display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:.8rem;
+    background:#F5F2E9;border:1px dashed var(--paper-line);border-radius:8px;padding:1rem 1.2rem;}
+  .buy-banner p{margin:0;font-size:.9rem;color:var(--graphite);}
+
+  /* Credit packs (buy page) */
   .packs{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:.8rem;margin-top:1rem;}
   .pack{border:1px solid var(--paper-line);border-radius:8px;padding:1rem;text-align:center;}
   .pack .qty{font-family:'Source Serif 4',serif;font-size:1.3rem;}
   .pack .price{color:var(--graphite);font-size:.9rem;margin:.3rem 0 .8rem;}
+
+  /* Landing page */
+  .hero{text-align:center;padding:2rem 1rem 1rem;}
+  .hero h2{font-family:'Source Serif 4',serif;font-size:1.6rem;margin:0 0 .8rem;}
+  .hero p{color:var(--graphite);max-width:520px;margin:0 auto 1.4rem;}
+  .feature-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:1rem;margin-top:1rem;}
+  .feature{text-align:center;padding:.5rem;}
+  .feature .icon{font-size:1.6rem;margin-bottom:.4rem;}
+  .feature h4{margin:.2rem 0;font-family:'Source Serif 4',serif;font-size:1.05rem;}
+  .feature p{color:var(--graphite);font-size:.85rem;margin:0;}
+  .price-preview{display:flex;justify-content:center;gap:1.5rem;flex-wrap:wrap;margin-top:1rem;}
+  .price-preview .tier{text-align:center;}
+  .price-preview .tier .qty{font-family:'Source Serif 4',serif;font-size:1.2rem;}
+  .price-preview .tier .price{color:var(--graphite);font-size:.85rem;}
 </style>
 </head>
 <body>
@@ -92,74 +115,135 @@
 
 <main>
 
-  <div class="panel">
-    <div class="account-bar">
-      <div>
-        <span class="email" id="accountEmail"></span>
-        <span class="balance" id="accountBalance"></span>
+  <!-- ===== LANDING VIEW (public) ===== -->
+  <div id="viewLanding">
+    <div class="panel hero">
+      <h2 data-i18n="heroHeadline">From exam questions to QTI, in minutes</h2>
+      <p data-i18n="heroSub">Upload a Word or PDF question set, review it, and export a QTI package your LMS can import directly — no manual re-typing.</p>
+      <button class="btn-primary" id="heroCta" data-i18n="heroCta">Log in / Sign up</button>
+    </div>
+
+    <div class="panel">
+      <div class="feature-grid">
+        <div class="feature">
+          <div class="icon">📄</div>
+          <h4 data-i18n="feature1Title">Docx & PDF</h4>
+          <p data-i18n="feature1Sub">Works from either format, using a simple text convention.</p>
+        </div>
+        <div class="feature">
+          <div class="icon">🌐</div>
+          <h4 data-i18n="feature2Title">English & German</h4>
+          <p data-i18n="feature2Sub">Both the interface and question parsing work in either language.</p>
+        </div>
+        <div class="feature">
+          <div class="icon">📦</div>
+          <h4 data-i18n="feature3Title">QTI 2.1 & 2.2</h4>
+          <p data-i18n="feature3Sub">Pick the version your LMS needs — including itslearning.</p>
+        </div>
       </div>
-      <button class="btn-ghost" id="logoutBtn" data-i18n="logoutBtn">Log out</button>
+    </div>
+
+    <div class="panel">
+      <strong data-i18n="pricingPreviewHeading">Simple pricing</strong>
+      <p style="color:var(--graphite);font-size:.88rem;margin:.4rem 0 0;" data-i18n="pricingPreviewSub">
+        A few free questions to try it, then pay only for what you convert. Sign in to purchase.
+      </p>
+      <div class="price-preview">
+        <div class="tier"><div class="qty">50</div><div class="price" data-i18n="pack50Price">€8</div></div>
+        <div class="tier"><div class="qty">100</div><div class="price" data-i18n="pack100Price">€15</div></div>
+        <div class="tier"><div class="qty">200</div><div class="price" data-i18n="pack200Price">€25</div></div>
+      </div>
     </div>
   </div>
 
-  <div class="panel">
-    <strong data-i18n="formatHeading">Formatting your source file</strong>
-    <p style="color:var(--graphite);font-size:.88rem;margin:.4rem 0 .8rem;" data-i18n="formatSub">
-      Separate each question with a blank line. Keyform recognizes these patterns:
-    </p>
-    <div class="convention" id="conventionBlock"></div>
+  <!-- ===== APP VIEW (logged in) ===== -->
+  <div id="viewApp" class="hidden">
+    <div class="panel">
+      <div class="account-bar">
+        <div>
+          <span class="email" id="accountEmail"></span>
+          <span class="balance" id="accountBalance"></span>
+        </div>
+        <div class="account-actions">
+          <button class="btn-link" id="changePasswordLink" data-i18n="changePasswordLink">Change password</button>
+          <button class="btn-ghost" id="logoutBtn" data-i18n="logoutBtn">Log out</button>
+        </div>
+      </div>
+    </div>
+
+    <div class="panel" id="buyBannerPanel">
+      <div class="buy-banner">
+        <p data-i18n="buyBannerText">Running low? Buy more questions any time.</p>
+        <button class="btn-primary" id="goToBuyBtn" data-i18n="buyBannerBtn">Buy questions</button>
+      </div>
+    </div>
+
+    <div class="panel">
+      <strong data-i18n="formatHeading">Formatting your source file</strong>
+      <p style="color:var(--graphite);font-size:.88rem;margin:.4rem 0 .8rem;" data-i18n="formatSub">
+        Separate each question with a blank line. Keyform recognizes these patterns:
+      </p>
+      <div class="convention" id="conventionBlock"></div>
+    </div>
+
+    <div class="panel">
+      <div class="upload-zone" id="dropZone">
+        <p style="margin:0 0 .8rem;color:var(--graphite);" data-i18n="dropText">Drop a .docx or .pdf here, or</p>
+        <input type="file" id="fileInput" accept=".docx,.pdf" style="display:none">
+        <button class="btn-primary" id="chooseBtn" data-i18n="chooseBtn">Choose file</button>
+        <p class="status" id="uploadStatus"></p>
+      </div>
+    </div>
+
+    <div class="panel" id="reviewPanel" style="display:none;">
+      <div class="toolbar">
+        <strong id="questionCount">0 questions</strong>
+      </div>
+      <div id="cardList"></div>
+      <div class="toolbar" style="margin-top:1rem;">
+        <button class="btn-ghost" id="addQuestionBtn" data-i18n="addQuestionBtn">+ Add question manually</button>
+        <div style="display:flex;align-items:center;gap:.6rem;">
+          <select id="qtiVersion" class="version-select">
+            <option value="2.2">QTI 2.2</option>
+            <option value="2.1">QTI 2.1 (itslearning)</option>
+          </select>
+          <button class="btn-primary" id="exportBtn" data-i18n="exportBtn">Export QTI package</button>
+        </div>
+      </div>
+      <p class="status" id="exportStatus"></p>
+    </div>
   </div>
 
-  <div class="panel">
-    <div class="upload-zone" id="dropZone">
-      <p style="margin:0 0 .8rem;color:var(--graphite);" data-i18n="dropText">Drop a .docx or .pdf here, or</p>
-      <input type="file" id="fileInput" accept=".docx,.pdf" style="display:none">
-      <button class="btn-primary" id="chooseBtn" data-i18n="chooseBtn">Choose file</button>
-      <p class="status" id="uploadStatus"></p>
+  <!-- ===== BUY VIEW (logged in, separate page) ===== -->
+  <div id="viewBuy" class="hidden">
+    <div class="panel">
+      <button class="btn-link" id="backToAppBtn" data-i18n="backToAppBtn">← Back to converter</button>
     </div>
-  </div>
-
-  <div class="panel" id="reviewPanel" style="display:none;">
-    <div class="toolbar">
-      <strong id="questionCount">0 questions</strong>
+    <div class="panel">
+      <strong data-i18n="packsHeading">Buy more questions</strong>
+      <p style="color:var(--graphite);font-size:.88rem;margin:.4rem 0;" id="buyPageBalance"></p>
+      <p style="color:var(--graphite);font-size:.88rem;margin:.4rem 0 0;" data-i18n="packsSub">
+        Credits never expire and are used only once your free monthly quota (if any) runs out.
+      </p>
+      <div class="packs">
+        <div class="pack">
+          <div class="qty">50</div>
+          <div class="price" data-i18n="pack50Price">€8</div>
+          <button class="btn-ghost buy-btn" data-pack="50" data-i18n="buyBtn">Buy</button>
+        </div>
+        <div class="pack">
+          <div class="qty">100</div>
+          <div class="price" data-i18n="pack100Price">€15</div>
+          <button class="btn-ghost buy-btn" data-pack="100" data-i18n="buyBtn">Buy</button>
+        </div>
+        <div class="pack">
+          <div class="qty">200</div>
+          <div class="price" data-i18n="pack200Price">€25</div>
+          <button class="btn-ghost buy-btn" data-pack="200" data-i18n="buyBtn">Buy</button>
+        </div>
+      </div>
+      <p class="status" id="buyStatus"></p>
     </div>
-    <div id="cardList"></div>
-    <div class="toolbar" style="margin-top:1rem;">
-      <button class="btn-ghost" id="addQuestionBtn" data-i18n="addQuestionBtn">+ Add question manually</button>
-      <div style="display:flex;align-items:center;gap:.6rem;">
-        <select id="qtiVersion" class="version-select">
-          <option value="2.2">QTI 2.2</option>
-          <option value="2.1">QTI 2.1 (itslearning)</option>
-        </select>
-        <button class="btn-primary" id="exportBtn" data-i18n="exportBtn">Export QTI package</button>
-      </div>
-    </div>
-    <p class="status" id="exportStatus"></p>
-  </div>
-
-  <div class="panel">
-    <strong data-i18n="packsHeading">Buy more questions</strong>
-    <p style="color:var(--graphite);font-size:.88rem;margin:.4rem 0 0;" data-i18n="packsSub">
-      Credits never expire and are used only once your free monthly quota (if any) runs out.
-    </p>
-    <div class="packs">
-      <div class="pack">
-        <div class="qty">50</div>
-        <div class="price" data-i18n="pack50Price">€8</div>
-        <button class="btn-ghost buy-btn" data-pack="50" data-i18n="buyBtn">Buy</button>
-      </div>
-      <div class="pack">
-        <div class="qty">100</div>
-        <div class="price" data-i18n="pack100Price">€15</div>
-        <button class="btn-ghost buy-btn" data-pack="100" data-i18n="buyBtn">Buy</button>
-      </div>
-      <div class="pack">
-        <div class="qty">200</div>
-        <div class="price" data-i18n="pack200Price">€25</div>
-        <button class="btn-ghost buy-btn" data-pack="200" data-i18n="buyBtn">Buy</button>
-      </div>
-    </div>
-    <p class="status" id="buyStatus"></p>
   </div>
 
 </main>
@@ -176,6 +260,22 @@
     <input type="password" id="authPassword" data-i18n-placeholder="passwordPlaceholder" placeholder="Password">
     <p class="gate-error" id="gateError"></p>
     <button class="btn-primary" id="authSubmit" style="width:100%;" data-i18n="loginSubmit">Log in</button>
+    <p style="text-align:center;margin-top:1rem;">
+      <button class="btn-link" id="closeGateBtn" data-i18n="closeGateBtn">Cancel</button>
+    </p>
+  </div>
+</div>
+
+<div class="gate-overlay" id="passwordOverlay">
+  <div class="gate-box">
+    <h3 data-i18n="changePasswordTitle">Change your password</h3>
+    <input type="password" id="currentPasswordInput" data-i18n-placeholder="currentPasswordPlaceholder" placeholder="Current password">
+    <input type="password" id="newPasswordInput" data-i18n-placeholder="newPasswordPlaceholder" placeholder="New password (min. 8 characters)">
+    <p class="gate-error" id="passwordError"></p>
+    <button class="btn-primary" id="passwordSubmit" style="width:100%;" data-i18n="changePasswordSubmit">Update password</button>
+    <p style="text-align:center;margin-top:1rem;">
+      <button class="btn-link" id="closePasswordBtn" data-i18n="closeGateBtn">Cancel</button>
+    </p>
   </div>
 </div>
 
@@ -190,6 +290,17 @@ const translations = {
   en: {
     title: "Keyform",
     tagline: "Turn a Word or PDF question set into a QTI package, ready for your LMS.",
+    heroHeadline: "From exam questions to QTI, in minutes",
+    heroSub: "Upload a Word or PDF question set, review it, and export a QTI package your LMS can import directly — no manual re-typing.",
+    heroCta: "Log in / Sign up",
+    feature1Title: "Docx & PDF",
+    feature1Sub: "Works from either format, using a simple text convention.",
+    feature2Title: "English & German",
+    feature2Sub: "Both the interface and question parsing work in either language.",
+    feature3Title: "QTI 2.1 & 2.2",
+    feature3Sub: "Pick the version your LMS needs — including itslearning.",
+    pricingPreviewHeading: "Simple pricing",
+    pricingPreviewSub: "A few free questions to try it, then pay only for what you convert. Sign in to purchase.",
     formatHeading: "Formatting your source file",
     formatSub: "Separate each question with a blank line. Keyform recognizes these patterns:",
     convention: `1. What is the capital of France?
@@ -236,6 +347,7 @@ Answer: Tokyo
     loginSubmit: "Log in",
     signupSubmit: "Sign up",
     authError: "Something went wrong — check your details and try again.",
+    closeGateBtn: "Cancel",
     packsHeading: "Buy more questions",
     packsSub: "Credits never expire and are used only once your free monthly quota (if any) runs out.",
     pack50Price: "€8",
@@ -246,10 +358,31 @@ Answer: Tokyo
     balanceUnlimited: "Unlimited (admin)",
     balanceQuotaAndCredits: (quota, credits) => `${quota} free this month · ${credits} credit(s)`,
     balanceCreditsOnly: (credits) => `${credits} credit(s)`,
+    buyBannerText: "Running low? Buy more questions any time.",
+    buyBannerBtn: "Buy questions",
+    backToAppBtn: "← Back to converter",
+    changePasswordLink: "Change password",
+    changePasswordTitle: "Change your password",
+    currentPasswordPlaceholder: "Current password",
+    newPasswordPlaceholder: "New password (min. 8 characters)",
+    changePasswordSubmit: "Update password",
+    passwordChanged: "Password updated.",
+    passwordError: "Something went wrong — check your details and try again.",
   },
   de: {
     title: "Keyform",
     tagline: "Verwandelt Word- oder PDF-Fragenkataloge in ein QTI-Paket für dein LMS.",
+    heroHeadline: "Von Prüfungsfragen zu QTI, in wenigen Minuten",
+    heroSub: "Lade einen Word- oder PDF-Fragenkatalog hoch, prüfe ihn und exportiere ein QTI-Paket, das dein LMS direkt importieren kann — kein manuelles Abtippen.",
+    heroCta: "Anmelden / Registrieren",
+    feature1Title: "Docx & PDF",
+    feature1Sub: "Funktioniert mit beiden Formaten über eine einfache Textkonvention.",
+    feature2Title: "Deutsch & Englisch",
+    feature2Sub: "Sowohl die Oberfläche als auch die Fragenerkennung funktionieren in beiden Sprachen.",
+    feature3Title: "QTI 2.1 & 2.2",
+    feature3Sub: "Wähle die Version, die dein LMS braucht — auch itslearning.",
+    pricingPreviewHeading: "Einfache Preise",
+    pricingPreviewSub: "Ein paar kostenlose Fragen zum Testen, danach zahlst du nur für das, was du konvertierst. Melde dich an, um zu kaufen.",
     formatHeading: "So formatierst du deine Quelldatei",
     formatSub: "Trenne jede Frage mit einer Leerzeile. Keyform erkennt folgende Muster:",
     convention: `1. Was ist die Hauptstadt von Frankreich?
@@ -296,6 +429,7 @@ Antwort: Tokio
     loginSubmit: "Anmelden",
     signupSubmit: "Registrieren",
     authError: "Etwas ist schiefgelaufen — überprüfe deine Angaben und versuche es erneut.",
+    closeGateBtn: "Abbrechen",
     packsHeading: "Mehr Fragen kaufen",
     packsSub: "Credits verfallen nie und werden erst genutzt, wenn dein kostenloses Monatskontingent (falls vorhanden) aufgebraucht ist.",
     pack50Price: "8 €",
@@ -306,6 +440,16 @@ Antwort: Tokio
     balanceUnlimited: "Unbegrenzt (Admin)",
     balanceQuotaAndCredits: (quota, credits) => `${quota} kostenlos diesen Monat · ${credits} Credit(s)`,
     balanceCreditsOnly: (credits) => `${credits} Credit(s)`,
+    buyBannerText: "Wird's knapp? Kaufe jederzeit mehr Fragen dazu.",
+    buyBannerBtn: "Fragen kaufen",
+    backToAppBtn: "← Zurück zum Konverter",
+    changePasswordLink: "Passwort ändern",
+    changePasswordTitle: "Passwort ändern",
+    currentPasswordPlaceholder: "Aktuelles Passwort",
+    newPasswordPlaceholder: "Neues Passwort (mind. 8 Zeichen)",
+    changePasswordSubmit: "Passwort aktualisieren",
+    passwordChanged: "Passwort aktualisiert.",
+    passwordError: "Etwas ist schiefgelaufen — überprüfe deine Angaben und versuche es erneut.",
   },
 };
 
@@ -317,7 +461,7 @@ const t = (key, ...args) => {
 
 const el = (id) => document.getElementById(id);
 let questions = [];
-let currentStatus = null; // last known {role, credits, unlimited, monthly_quota_limit, monthly_quota_remaining}
+let currentStatus = null;
 
 function applyStaticTranslations(){
   document.querySelectorAll("[data-i18n]").forEach((elm) => {
@@ -333,7 +477,6 @@ function applyStaticTranslations(){
   if (questions.length) renderQuestions();
   renderBalance();
 }
-
 function setLanguage(lang){
   currentLang = lang;
   localStorage.setItem("qti_lang", lang);
@@ -341,6 +484,16 @@ function setLanguage(lang){
 }
 el("langEn").onclick = () => setLanguage("en");
 el("langDe").onclick = () => setLanguage("de");
+
+// --- View navigation ---
+function showView(name){
+  el("viewLanding").classList.toggle("hidden", name !== "landing");
+  el("viewApp").classList.toggle("hidden", name !== "app");
+  el("viewBuy").classList.toggle("hidden", name !== "buy");
+}
+el("heroCta").onclick = () => showAuthGate("login");
+el("goToBuyBtn").onclick = () => { showView("buy"); renderBalance(); };
+el("backToAppBtn").onclick = () => showView("app");
 
 // --- Auth token / headers ---
 const authToken = () => localStorage.getItem("qti_token") || "";
@@ -351,13 +504,13 @@ function apiHeaders(json=true){
   if (tok) h["Authorization"] = `Bearer ${tok}`;
   return h;
 }
-
 async function checkGateErrors(res){
   if (res.status === 429) return t("rateLimited");
   if (res.status === 401){
     localStorage.removeItem("qti_token");
+    showView("landing");
     showAuthGate("login");
-    return null; // gate reappears; no need for a separate message
+    return null;
   }
   return null;
 }
@@ -376,6 +529,7 @@ function showAuthGate(mode){
 }
 el("tabLogin").onclick = () => showAuthGate("login");
 el("tabSignup").onclick = () => showAuthGate("signup");
+el("closeGateBtn").onclick = () => { el("gateOverlay").style.display = "none"; };
 
 el("authSubmit").onclick = async () => {
   const email = el("authEmail").value.trim();
@@ -400,6 +554,7 @@ el("authSubmit").onclick = async () => {
     el("authEmail").value = ""; el("authPassword").value = "";
     el("accountEmail").textContent = email;
     renderBalance();
+    showView("app");
   }catch(err){
     el("gateError").textContent = t("authError");
     el("gateError").style.display = "block";
@@ -414,29 +569,66 @@ el("logoutBtn").onclick = () => {
   currentStatus = null;
   questions = [];
   renderQuestions();
-  showAuthGate("login");
+  showView("landing");
+};
+
+// --- Change password ---
+el("changePasswordLink").onclick = () => {
+  el("currentPasswordInput").value = "";
+  el("newPasswordInput").value = "";
+  el("passwordError").style.display = "none";
+  el("passwordOverlay").style.display = "flex";
+};
+el("closePasswordBtn").onclick = () => { el("passwordOverlay").style.display = "none"; };
+el("passwordSubmit").onclick = async () => {
+  const current_password = el("currentPasswordInput").value;
+  const new_password = el("newPasswordInput").value;
+  if (!current_password || !new_password) return;
+  el("passwordSubmit").disabled = true;
+  el("passwordError").style.display = "none";
+  try{
+    const res = await fetch(`${API_BASE}/api/auth/change-password`, {
+      method: "POST", headers: apiHeaders(), body: JSON.stringify({current_password, new_password}),
+    });
+    const data = await res.json();
+    if (!res.ok){
+      el("passwordError").textContent = data.detail || t("passwordError");
+      el("passwordError").style.display = "block";
+      return;
+    }
+    el("passwordOverlay").style.display = "none";
+  }catch(err){
+    el("passwordError").textContent = t("passwordError");
+    el("passwordError").style.display = "block";
+  }finally{
+    el("passwordSubmit").disabled = false;
+  }
 };
 
 function renderBalance(){
-  if (!currentStatus){ el("accountBalance").textContent = ""; return; }
+  if (!currentStatus){ el("accountBalance").textContent = ""; el("buyPageBalance").textContent = ""; return; }
+  let text;
   if (currentStatus.unlimited){
-    el("accountBalance").textContent = " — " + t("balanceUnlimited");
+    text = t("balanceUnlimited");
   } else if (currentStatus.monthly_quota_limit > 0){
-    el("accountBalance").textContent = " — " + t("balanceQuotaAndCredits", currentStatus.monthly_quota_remaining, currentStatus.credits);
+    text = t("balanceQuotaAndCredits", currentStatus.monthly_quota_remaining, currentStatus.credits);
   } else {
-    el("accountBalance").textContent = " — " + t("balanceCreditsOnly", currentStatus.credits);
+    text = t("balanceCreditsOnly", currentStatus.credits);
   }
+  el("accountBalance").textContent = " — " + text;
+  el("buyPageBalance").textContent = text;
 }
 
 async function loadMe(){
   try{
     const res = await fetch(`${API_BASE}/api/me`, { headers: apiHeaders(false) });
-    if (!res.ok){ showAuthGate("login"); return; }
+    if (!res.ok){ showView("landing"); return; }
     const data = await res.json();
     currentStatus = data.status;
     el("accountEmail").textContent = data.email;
     renderBalance();
-  }catch(err){ showAuthGate("login"); }
+    showView("app");
+  }catch(err){ showView("landing"); }
 }
 
 // --- Upload ---
@@ -475,7 +667,6 @@ async function handleFile(file){
   }
 }
 
-// --- Render editable cards ---
 function renderQuestions(){
   el("reviewPanel").style.display = questions.length ? "block" : "none";
   el("questionCount").textContent = t("questionCount", questions.length);
@@ -577,7 +768,7 @@ el("exportBtn").onclick = async () => {
     a.href = url; a.download = `qti-${versionSelect.value}-package.zip`; a.click();
     URL.revokeObjectURL(url);
     el("exportStatus").textContent = t("downloaded");
-    loadMe(); // refresh balance display after a successful charge
+    loadMe();
   }catch(err){
     el("exportStatus").textContent = t("exportError", err.message);
   }
@@ -604,7 +795,7 @@ document.querySelectorAll(".buy-btn").forEach((btn) => {
 });
 
 applyStaticTranslations();
-if (authToken()) loadMe(); else showAuthGate("login");
+if (authToken()) loadMe(); else showView("landing");
 </script>
 </body>
 </html>

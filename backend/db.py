@@ -179,6 +179,11 @@ def charge_export(user_id: int, question_count: int):
         return True, f"charged {from_quota} from monthly quota, {from_credits} from credits"
 
 
+def update_password(user_id: int, new_password_hash: str):
+    with get_conn() as conn:
+        conn.execute("UPDATE users SET password_hash = ? WHERE id = ?", (new_password_hash, user_id))
+
+
 def delete_user_by_email(email: str) -> bool:
     with get_conn() as conn:
         cur = conn.execute("DELETE FROM users WHERE email = ?", (email.lower().strip(),))

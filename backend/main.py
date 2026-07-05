@@ -100,6 +100,20 @@ def me(user=Depends(get_current_user)):
     return {"email": user["email"], "status": db.get_status(user["id"])}
 
 
+@app.post("/api/auth/change-password")
+def change_password(body: dict, user=Depends(get_current_user)):
+    current_password = (body or {}).get("current_password", "")
+    new_password = (body or {}).get("new_password", "")
+
+    if not auth.verify_password(current_password, user["password_hash"]):
+        raise HTTPException(401, "Current password is incorrect.")
+    if len(new_password) < 8:
+        raise HTTPException(400, "New password must be at least 8 characters.")
+
+    db.update_password(user["id"], auth.hash_password(new_password))
+    return {"updated": True}
+
+
 # --- Core conversion features ---
 
 @app.post("/api/parse", dependencies=[
