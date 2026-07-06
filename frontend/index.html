@@ -258,6 +258,12 @@
 
 </main>
 
+<footer style="text-align:center;padding:1rem 1.5rem 6rem;color:var(--graphite);font-size:.82rem;">
+  <a href="terms.html" target="_blank" data-i18n="footerLegalLink" style="color:var(--graphite);">Terms &amp; Privacy Policy</a>
+  &nbsp;·&nbsp;
+  <button class="btn-link" id="cookieSettingsLink" data-i18n="footerCookieSettings" style="color:var(--graphite);text-decoration:underline;">Cookie settings</button>
+</footer>
+
 <div class="gate-overlay" id="gateOverlay">
   <div class="gate-box">
     <div class="gate-tabs">
@@ -280,9 +286,9 @@
       <input type="text" id="authInstitution" class="hidden" data-i18n-placeholder="institutionPlaceholder" placeholder="School / university / training college">
       <select id="authCountry">
         <option value="" data-i18n="countrySelectPlaceholder">Country…</option>
-        <option value="Germany">Germany</option>
-        <option value="Austria">Austria</option>
-        <option value="Switzerland">Switzerland</option>
+        <option value="Germany" data-i18n="countryGermany">Germany</option>
+        <option value="Austria" data-i18n="countryAustria">Austria</option>
+        <option value="Switzerland" data-i18n="countrySwitzerland">Switzerland</option>
         <option value="Other" data-i18n="countryOther">Other</option>
       </select>
       <select id="authBundesland" class="hidden">
@@ -306,7 +312,7 @@
       </select>
       <label style="display:flex;align-items:flex-start;gap:.5rem;font-size:.82rem;color:var(--graphite);margin-bottom:.6rem;">
         <input type="checkbox" id="authPrivacyAccepted" style="width:auto;margin:.2rem 0 0;">
-        <span data-i18n="privacyAcceptLabel">I have read and accept the privacy policy.</span>
+        <span data-i18n-html="privacyAcceptLabel"></span>
       </label>
       <label style="display:flex;align-items:flex-start;gap:.5rem;font-size:.82rem;color:var(--graphite);margin-bottom:.8rem;">
         <input type="checkbox" id="authMarketingConsent" style="width:auto;margin:.2rem 0 0;">
@@ -407,18 +413,23 @@ Answer: Tokyo
     phonePlaceholder: "Phone (optional)",
     institutionPlaceholder: "School / university / training college",
     countrySelectPlaceholder: "Country…",
+    countryGermany: "Germany",
+    countryAustria: "Austria",
+    countrySwitzerland: "Switzerland",
     countryOther: "Other",
     bundeslandSelectPlaceholder: "Bundesland…",
     occupationSelectPlaceholder: "I am a…",
     occupationTeacher: "Teacher",
     occupationStudent: "Student",
     occupationOther: "Other",
-    privacyAcceptLabel: "I have read and accept the privacy policy.",
+    privacyAcceptLabel: 'I have read and accept the <a href="terms.html" target="_blank">Terms &amp; Conditions and Privacy Policy</a>.',
     marketingConsentLabel: "I'd like to receive occasional emails about Keyform updates (optional).",
     signupValidationError: "Please fill in your name, country (and Bundesland if in Germany), choose teacher/student/other, and accept the privacy policy.",
     cookieBannerText: "We use essential cookies/local storage to keep you logged in. We'd also like your OK to use analytics later to improve Keyform.",
     cookieNecessaryBtn: "Necessary only",
     cookieAcceptBtn: "Accept all",
+    footerLegalLink: "Terms & Privacy Policy",
+    footerCookieSettings: "Cookie settings",
     packsHeading: "Buy more questions",
     packsSub: "Credits never expire and are used only once your free monthly quota (if any) runs out.",
     pack50Price: "€8",
@@ -505,18 +516,23 @@ Antwort: Tokio
     phonePlaceholder: "Telefon (optional)",
     institutionPlaceholder: "Schule / Universität / Ausbildungsstätte",
     countrySelectPlaceholder: "Land…",
+    countryGermany: "Deutschland",
+    countryAustria: "Österreich",
+    countrySwitzerland: "Schweiz",
     countryOther: "Sonstiges",
     bundeslandSelectPlaceholder: "Bundesland…",
     occupationSelectPlaceholder: "Ich bin…",
     occupationTeacher: "Lehrer/in",
     occupationStudent: "Schüler/in oder Student/in",
     occupationOther: "Sonstiges",
-    privacyAcceptLabel: "Ich habe die Datenschutzerklärung gelesen und akzeptiere sie.",
+    privacyAcceptLabel: 'Ich habe die <a href="terms.html" target="_blank">AGB und Datenschutzerklärung</a> gelesen und akzeptiere sie.',
     marketingConsentLabel: "Ich möchte gelegentlich E-Mails zu Keyform-Updates erhalten (optional).",
     signupValidationError: "Bitte gib deinen Namen, dein Land (und Bundesland, falls Deutschland) ein, wähle Lehrer/Schüler/Sonstiges, und akzeptiere die Datenschutzerklärung.",
     cookieBannerText: "Wir verwenden essenzielle Cookies/lokalen Speicher, um dich angemeldet zu halten. Wir würden gerne später auch Analyse-Tools nutzen, um Keyform zu verbessern — dafür bräuchten wir dein OK.",
     cookieNecessaryBtn: "Nur Notwendiges",
     cookieAcceptBtn: "Alle akzeptieren",
+    footerLegalLink: "AGB & Datenschutzerklärung",
+    footerCookieSettings: "Cookie-Einstellungen",
     packsHeading: "Mehr Fragen kaufen",
     packsSub: "Credits verfallen nie und werden erst genutzt, wenn dein kostenloses Monatskontingent (falls vorhanden) aufgebraucht ist.",
     pack50Price: "8 €",
@@ -553,6 +569,9 @@ let currentStatus = null;
 function applyStaticTranslations(){
   document.querySelectorAll("[data-i18n]").forEach((elm) => {
     elm.textContent = t(elm.getAttribute("data-i18n"));
+  });
+  document.querySelectorAll("[data-i18n-html]").forEach((elm) => {
+    elm.innerHTML = t(elm.getAttribute("data-i18n-html"));
   });
   document.querySelectorAll("[data-i18n-placeholder]").forEach((elm) => {
     elm.placeholder = t(elm.getAttribute("data-i18n-placeholder"));
@@ -929,6 +948,9 @@ el("cookieAcceptBtn").onclick = () => {
 el("cookieNecessaryBtn").onclick = () => {
   localStorage.setItem("qti_cookie_consent", "necessary");
   el("cookieBanner").classList.add("hidden");
+};
+el("cookieSettingsLink").onclick = () => {
+  el("cookieBanner").classList.remove("hidden");
 };
 initCookieBanner();
 </script>

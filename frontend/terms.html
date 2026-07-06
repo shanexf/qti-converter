@@ -1,0 +1,254 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Keyform — Terms &amp; Privacy Policy</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Source+Serif+4:wght@600;700&family=Inter:wght@400;500;600&family=IBM+Plex+Mono:wght@500&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --paper:#FAF8F3; --paper-line:#E4DECD; --ink:#1B2740; --graphite:#5B584F;
+    --stamp:#B7472A; --card:#FFFFFF; --shadow:rgba(27,39,64,0.08);
+  }
+  *{box-sizing:border-box;}
+  body{margin:0;background:var(--paper);color:var(--ink);font-family:'Inter',sans-serif;
+    background-image:linear-gradient(var(--paper-line) 1px, transparent 1px);
+    background-size:100% 2.1em;}
+  header{padding:2rem 1.5rem 1rem;text-align:center;position:relative;}
+  h1{font-family:'Source Serif 4',serif;font-size:1.8rem;margin:0 0 .3rem;}
+  .lang-switch{position:absolute;top:1.2rem;right:1.5rem;display:flex;gap:.3rem;}
+  .lang-btn{background:transparent;border:1px solid var(--paper-line);color:var(--graphite);
+    font-family:'IBM Plex Mono',monospace;font-size:.75rem;font-weight:600;padding:.3rem .6rem;
+    border-radius:5px;cursor:pointer;}
+  .lang-btn.active{background:var(--ink);color:#fff;border-color:var(--ink);}
+  main{max-width:760px;margin:0 auto;padding:0 1.5rem 4rem;}
+  .panel{background:var(--card);border:1px solid var(--paper-line);border-radius:10px;
+    box-shadow:0 4px 18px var(--shadow);padding:1.8rem;margin-bottom:1.5rem;line-height:1.6;}
+  .disclaimer{background:#FBF3EF;border:1px dashed var(--stamp);border-radius:8px;
+    padding:1rem 1.2rem;font-size:.85rem;color:var(--graphite);margin-bottom:1.5rem;}
+  .tabs{display:flex;gap:.5rem;margin-bottom:1.5rem;}
+  .tab{flex:1;background:#fff;border:1px solid var(--paper-line);color:var(--graphite);
+    font-weight:600;padding:.7rem;border-radius:8px;cursor:pointer;font-family:'Inter',sans-serif;font-size:.9rem;}
+  .tab.active{background:var(--ink);color:#fff;border-color:var(--ink);}
+  h2{font-family:'Source Serif 4',serif;font-size:1.3rem;margin-top:0;}
+  h3{font-family:'Source Serif 4',serif;font-size:1.05rem;margin-bottom:.3rem;}
+  p, li{font-size:.92rem;color:#2A3550;}
+  .back-link{display:inline-block;margin-bottom:1rem;color:var(--ink);font-weight:600;text-decoration:none;font-size:.88rem;}
+  .hidden{display:none !important;}
+</style>
+</head>
+<body>
+
+<header>
+  <div class="lang-switch">
+    <button class="lang-btn" id="langEn" type="button">EN</button>
+    <button class="lang-btn" id="langDe" type="button">DE</button>
+  </div>
+  <h1 data-i18n="pageTitle">Keyform — Legal</h1>
+</header>
+
+<main>
+  <a href="index.html" class="back-link" data-i18n="backLink">← Back to Keyform</a>
+
+  <div class="disclaimer" data-i18n="disclaimer">
+    This page is a general-purpose draft, not certified legal advice. It has not been reviewed by a lawyer for your specific business — please have it checked before relying on it for real customers.
+  </div>
+
+  <div class="tabs">
+    <button class="tab active" id="tabTerms" data-i18n="tabTerms">Terms &amp; Conditions</button>
+    <button class="tab" id="tabPrivacy" data-i18n="tabPrivacy">Privacy Policy</button>
+  </div>
+
+  <div class="panel" id="panelTerms">
+    <div data-i18n-html="termsContent"></div>
+  </div>
+
+  <div class="panel hidden" id="panelPrivacy">
+    <div data-i18n-html="privacyContent"></div>
+  </div>
+</main>
+
+<script>
+const el = (id) => document.getElementById(id);
+
+const translations = {
+  en: {
+    pageTitle: "Keyform — Legal",
+    backLink: "← Back to Keyform",
+    disclaimer: "This page is a general-purpose draft, not certified legal advice. It has not been reviewed by a lawyer for your specific business — please have it checked before relying on it for real customers.",
+    tabTerms: "Terms & Conditions",
+    tabPrivacy: "Privacy Policy",
+    termsContent: `
+      <h2>Terms &amp; Conditions</h2>
+      <p><em>Last updated: [insert date]</em></p>
+
+      <h3>1. Scope</h3>
+      <p>These Terms govern the use of Keyform ("the Service"), operated by [Your Name / Company Name, Address, Contact Email] ("we", "us"). By creating an account, you agree to these Terms.</p>
+
+      <h3>2. Description of the Service</h3>
+      <p>Keyform converts question sets from Word (.docx) or PDF files into QTI-format packages for import into learning management systems. Some usage is free (a trial allowance or a monthly free quota for certain accounts); beyond that, usage is paid for via prepaid credit packs.</p>
+
+      <h3>3. Accounts</h3>
+      <p>You must provide accurate information when registering, including your name and, if applicable, your school/university/training institution. You are responsible for keeping your password confidential and for all activity under your account.</p>
+
+      <h3>4. Prices and Payment</h3>
+      <p>Credit packs are purchased as one-time payments via our payment provider (Stripe). Prices are shown in Euros and include any applicable taxes unless stated otherwise. Purchased credits do not expire and are non-transferable between accounts.</p>
+
+      <h3>5. Right of Withdrawal (Digital Content)</h3>
+      <p>Under EU/German consumer law, you generally have a 14-day right of withdrawal from a distance contract. However, for digital content not supplied on a physical medium, this right ends once we begin performance with your express consent and acknowledgment that you thereby lose your right of withdrawal. By purchasing a credit pack and using credits to generate a QTI package, you agree that performance begins immediately and you waive the right of withdrawal accordingly, to the extent permitted by law.</p>
+
+      <h3>6. Accuracy of Converted Content</h3>
+      <p>Keyform parses question text based on a defined formatting convention. We do not guarantee that every question will be parsed correctly — please review the generated questions before exporting and relying on them.</p>
+
+      <h3>7. Liability</h3>
+      <p>We are liable without limitation for intent and gross negligence, and for injury to life, body, or health. For ordinary negligence, we are liable only for breach of a material contractual obligation ("Kardinalpflicht"), and only to the extent of foreseeable, typical damage. Liability for data loss is limited to the cost of recovery that would have arisen had you taken reasonable data backup measures.</p>
+
+      <h3>8. Termination</h3>
+      <p>You may stop using the Service and request account deletion at any time by contacting us. We may suspend or terminate accounts that violate these Terms.</p>
+
+      <h3>9. Changes to These Terms</h3>
+      <p>We may update these Terms from time to time. Continued use of the Service after changes take effect constitutes acceptance of the revised Terms.</p>
+
+      <h3>10. Governing Law</h3>
+      <p>These Terms are governed by German law. If you are a consumer, mandatory consumer-protection provisions of your country of residence remain unaffected.</p>
+
+      <h3>11. Contact</h3>
+      <p>[Your Name / Company Name]<br>[Address]<br>[Email]</p>
+    `,
+    privacyContent: `
+      <h2>Privacy Policy</h2>
+      <p><em>Last updated: [insert date]</em></p>
+
+      <h3>1. Data Controller</h3>
+      <p>[Your Name / Company Name, Address, Contact Email] is the data controller for the personal data described below.</p>
+
+      <h3>2. What We Collect</h3>
+      <p>When you create an account, we collect: your email address, password (stored as a secure one-way hash, never in plain text), full name, occupation (teacher/student/other), your school/university/training institution (if applicable), country, Bundesland (if in Germany), and optionally your phone number. We also store your usage of the Service — how many questions you've converted and your remaining balance — and, if you purchase credits, records of that transaction (via our payment provider, Stripe).</p>
+
+      <h3>3. Purpose and Legal Basis</h3>
+      <p>We process this data to: (a) provide the Service and manage your account (Art. 6(1)(b) GDPR — performance of a contract); (b) charge for usage correctly; (c) comply with legal obligations, e.g. accounting (Art. 6(1)(c) GDPR); and (d) — only if you've separately opted in — to send you occasional emails about Keyform updates (Art. 6(1)(a) GDPR — consent, which you can withdraw at any time).</p>
+
+      <h3>4. Cookies and Local Storage</h3>
+      <p>We use your browser's local storage to keep you logged in and remember your language/version preferences — this is strictly necessary for the Service to function. If you consent via our cookie banner, we may in the future use additional tools (e.g. analytics such as Google Search Console, or similar) to understand how the Service is used and improve it. You can change your choice at any time via the "Cookie settings" link.</p>
+
+      <h3>5. Third-Party Processors</h3>
+      <p>We use the following third parties to operate the Service, each processing data on our behalf under appropriate data-processing agreements: Railway (application hosting, EU/US infrastructure), Netlify (website hosting), and Stripe (payment processing). We do not sell your personal data to anyone.</p>
+
+      <h3>6. Data Retention</h3>
+      <p>We retain your account data for as long as your account is active. If you request deletion, we will delete your personal data within a reasonable time, except where we're legally required to retain certain records (e.g. transaction records for tax purposes).</p>
+
+      <h3>7. Your Rights</h3>
+      <p>Under GDPR, you have the right to access, correct, delete, or export your personal data, to object to or restrict certain processing, and to withdraw consent at any time (e.g. for marketing emails). To exercise these rights, contact us at the address below. You also have the right to lodge a complaint with your local data protection authority.</p>
+
+      <h3>8. Contact</h3>
+      <p>[Your Name / Company Name]<br>[Address]<br>[Email]</p>
+    `,
+  },
+  de: {
+    pageTitle: "Keyform — Rechtliches",
+    backLink: "← Zurück zu Keyform",
+    disclaimer: "Diese Seite ist ein allgemeiner Entwurf und keine geprüfte Rechtsberatung. Sie wurde nicht von einem Anwalt für dein konkretes Geschäft geprüft — bitte vor dem Einsatz mit echten Kunden prüfen lassen.",
+    tabTerms: "AGB",
+    tabPrivacy: "Datenschutzerklärung",
+    termsContent: `
+      <h2>Allgemeine Geschäftsbedingungen (AGB)</h2>
+      <p><em>Stand: [Datum einfügen]</em></p>
+
+      <h3>1. Geltungsbereich</h3>
+      <p>Diese AGB regeln die Nutzung von Keyform ("der Dienst"), betrieben von [Name / Firma, Adresse, E-Mail] ("wir"). Mit der Registrierung eines Kontos akzeptierst du diese AGB.</p>
+
+      <h3>2. Leistungsbeschreibung</h3>
+      <p>Keyform wandelt Fragensammlungen aus Word- (.docx) oder PDF-Dateien in QTI-Pakete zum Import in Lernplattformen um. Ein Teil der Nutzung ist kostenlos (Testguthaben oder monatliches Freikontingent für bestimmte Konten); darüber hinaus wird die Nutzung über vorausbezahlte Frage-Pakete abgerechnet.</p>
+
+      <h3>3. Konten</h3>
+      <p>Du musst bei der Registrierung wahrheitsgemäße Angaben machen, einschließlich deines Namens und, falls zutreffend, deiner Schule/Universität/Ausbildungsstätte. Du bist für die Geheimhaltung deines Passworts und für alle Aktivitäten unter deinem Konto verantwortlich.</p>
+
+      <h3>4. Preise und Zahlung</h3>
+      <p>Frage-Pakete werden als Einmalzahlung über unseren Zahlungsanbieter (Stripe) erworben. Preise werden in Euro angezeigt und enthalten, sofern nicht anders angegeben, die gesetzliche Mehrwertsteuer. Erworbene Credits verfallen nicht und sind nicht auf andere Konten übertragbar.</p>
+
+      <h3>5. Widerrufsrecht (digitale Inhalte)</h3>
+      <p>Nach EU-/deutschem Verbraucherrecht besteht grundsätzlich ein 14-tägiges Widerrufsrecht bei Fernabsatzverträgen. Bei digitalen Inhalten, die nicht auf einem körperlichen Datenträger geliefert werden, erlischt dieses Recht jedoch, sobald wir mit deiner ausdrücklichen Zustimmung und Kenntnisnahme des damit verbundenen Verlusts des Widerrufsrechts mit der Ausführung beginnen. Mit dem Kauf eines Frage-Pakets und der Nutzung von Credits zur Erzeugung eines QTI-Pakets stimmst du zu, dass die Ausführung sofort beginnt, und verzichtest entsprechend, soweit gesetzlich zulässig, auf dein Widerrufsrecht.</p>
+
+      <h3>6. Richtigkeit der konvertierten Inhalte</h3>
+      <p>Keyform analysiert Fragetexte anhand einer festgelegten Formatierungskonvention. Wir garantieren nicht, dass jede Frage korrekt erkannt wird — bitte prüfe die erzeugten Fragen vor dem Export und der weiteren Verwendung.</p>
+
+      <h3>7. Haftung</h3>
+      <p>Wir haften unbeschränkt für Vorsatz und grobe Fahrlässigkeit sowie für Schäden aus der Verletzung des Lebens, des Körpers oder der Gesundheit. Bei einfacher Fahrlässigkeit haften wir nur bei Verletzung einer wesentlichen Vertragspflicht (Kardinalpflicht) und begrenzt auf den vorhersehbaren, vertragstypischen Schaden. Die Haftung für Datenverlust beschränkt sich auf den Wiederherstellungsaufwand, der bei ordnungsgemäßer Datensicherung entstanden wäre.</p>
+
+      <h3>8. Kündigung</h3>
+      <p>Du kannst die Nutzung des Dienstes jederzeit beenden und die Löschung deines Kontos beantragen, indem du uns kontaktierst. Wir können Konten sperren oder kündigen, die gegen diese AGB verstoßen.</p>
+
+      <h3>9. Änderungen dieser AGB</h3>
+      <p>Wir können diese AGB von Zeit zu Zeit aktualisieren. Die fortgesetzte Nutzung des Dienstes nach Inkrafttreten von Änderungen gilt als Zustimmung zu den geänderten AGB.</p>
+
+      <h3>10. Anwendbares Recht</h3>
+      <p>Es gilt deutsches Recht. Bist du Verbraucher, bleiben zwingende verbraucherschützende Vorschriften deines Wohnsitzstaates unberührt.</p>
+
+      <h3>11. Kontakt</h3>
+      <p>[Name / Firma]<br>[Adresse]<br>[E-Mail]</p>
+    `,
+    privacyContent: `
+      <h2>Datenschutzerklärung</h2>
+      <p><em>Stand: [Datum einfügen]</em></p>
+
+      <h3>1. Verantwortlicher</h3>
+      <p>[Name / Firma, Adresse, E-Mail] ist Verantwortlicher für die im Folgenden beschriebenen personenbezogenen Daten.</p>
+
+      <h3>2. Welche Daten wir erheben</h3>
+      <p>Bei der Kontoerstellung erheben wir: deine E-Mail-Adresse, dein Passwort (als sicherer Einweg-Hash gespeichert, niemals im Klartext), deinen vollständigen Namen, deine Tätigkeit (Lehrer/in, Schüler/in bzw. Student/in oder Sonstiges), deine Schule/Universität/Ausbildungsstätte (falls zutreffend), dein Land, dein Bundesland (falls Deutschland) und optional deine Telefonnummer. Wir speichern zudem deine Nutzung des Dienstes — wie viele Fragen du konvertiert hast und dein verbleibendes Guthaben — sowie, bei einem Guthabenkauf, die entsprechenden Transaktionsdaten (über unseren Zahlungsanbieter Stripe).</p>
+
+      <h3>3. Zweck und Rechtsgrundlage</h3>
+      <p>Wir verarbeiten diese Daten, um: (a) den Dienst bereitzustellen und dein Konto zu verwalten (Art. 6 Abs. 1 lit. b DSGVO — Vertragserfüllung); (b) die Nutzung korrekt abzurechnen; (c) gesetzlichen Pflichten nachzukommen, z. B. der Buchführung (Art. 6 Abs. 1 lit. c DSGVO); und (d) — nur bei gesonderter Einwilligung — dir gelegentlich E-Mails zu Keyform-Updates zu senden (Art. 6 Abs. 1 lit. a DSGVO — Einwilligung, jederzeit widerrufbar).</p>
+
+      <h3>4. Cookies und lokaler Speicher</h3>
+      <p>Wir nutzen den lokalen Speicher deines Browsers, um dich angemeldet zu halten und deine Sprach-/Versionseinstellungen zu merken — dies ist für die Funktion des Dienstes zwingend erforderlich. Mit deiner Zustimmung über unseren Cookie-Banner können wir künftig zusätzliche Tools (z. B. Analyse-Dienste wie Google Search Console oder Ähnliches) nutzen, um die Nutzung des Dienstes zu verstehen und zu verbessern. Du kannst deine Wahl jederzeit über den Link "Cookie-Einstellungen" ändern.</p>
+
+      <h3>5. Auftragsverarbeiter</h3>
+      <p>Wir setzen folgende Dritte zum Betrieb des Dienstes ein, die jeweils im Rahmen entsprechender Auftragsverarbeitungsverträge für uns tätig werden: Railway (Anwendungs-Hosting, EU-/US-Infrastruktur), Netlify (Website-Hosting) und Stripe (Zahlungsabwicklung). Wir verkaufen deine personenbezogenen Daten an niemanden.</p>
+
+      <h3>6. Speicherdauer</h3>
+      <p>Wir speichern deine Kontodaten, solange dein Konto aktiv ist. Bei einer Löschanfrage löschen wir deine personenbezogenen Daten innerhalb angemessener Zeit, außer wir sind gesetzlich verpflichtet, bestimmte Unterlagen aufzubewahren (z. B. Transaktionsdaten aus steuerlichen Gründen).</p>
+
+      <h3>7. Deine Rechte</h3>
+      <p>Nach der DSGVO hast du das Recht auf Auskunft, Berichtigung, Löschung oder Export deiner personenbezogenen Daten, das Recht, bestimmten Verarbeitungen zu widersprechen oder sie einschränken zu lassen, sowie das Recht, eine Einwilligung jederzeit zu widerrufen (z. B. für Marketing-E-Mails). Um diese Rechte auszuüben, kontaktiere uns unter der unten stehenden Adresse. Du hast zudem das Recht, dich bei deiner zuständigen Datenschutzaufsichtsbehörde zu beschweren.</p>
+
+      <h3>8. Kontakt</h3>
+      <p>[Name / Firma]<br>[Adresse]<br>[E-Mail]</p>
+    `,
+  },
+};
+
+let currentLang = localStorage.getItem("qti_lang") || "en";
+
+function render(){
+  document.documentElement.lang = currentLang;
+  el("langEn").classList.toggle("active", currentLang === "en");
+  el("langDe").classList.toggle("active", currentLang === "de");
+  document.querySelectorAll("[data-i18n]").forEach((elm) => {
+    elm.textContent = translations[currentLang][elm.getAttribute("data-i18n")];
+  });
+  document.querySelectorAll("[data-i18n-html]").forEach((elm) => {
+    elm.innerHTML = translations[currentLang][elm.getAttribute("data-i18n-html")];
+  });
+}
+
+el("langEn").onclick = () => { currentLang = "en"; localStorage.setItem("qti_lang","en"); render(); };
+el("langDe").onclick = () => { currentLang = "de"; localStorage.setItem("qti_lang","de"); render(); };
+
+el("tabTerms").onclick = () => {
+  el("tabTerms").classList.add("active"); el("tabPrivacy").classList.remove("active");
+  el("panelTerms").classList.remove("hidden"); el("panelPrivacy").classList.add("hidden");
+};
+el("tabPrivacy").onclick = () => {
+  el("tabPrivacy").classList.add("active"); el("tabTerms").classList.remove("active");
+  el("panelPrivacy").classList.remove("hidden"); el("panelTerms").classList.add("hidden");
+};
+
+// If linked with #privacy, open directly on that tab
+if (window.location.hash === "#privacy") el("tabPrivacy").click();
+
+render();
+</script>
+</body>
+</html>
