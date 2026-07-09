@@ -5,71 +5,71 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Keyform — Docx/PDF to QTI Converter</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
-<link href="https://fonts.googleapis.com/css2?family=Source+Serif+4:wght@600;700&family=Inter:wght@400;500;600&family=IBM+Plex+Mono:wght@500&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,600;9..144,700&family=Inter:wght@400;500;600;700&family=IBM+Plex+Mono:wght@500&display=swap" rel="stylesheet">
 <style>
   :root{
-    --paper:#FAF8F3; --paper-line:#E4DECD; --ink:#1B2740; --graphite:#5B584F;
-    --stamp:#B7472A; --correct:#2E6B4F; --card:#FFFFFF; --shadow:rgba(27,39,64,0.08);
+    --white:#FFFFFF; --surface:#F7F7FB; --border:#E7E7F2; --ink:#14171F; --graphite:#5B6072;
+    --primary:#4F46E5; --primary-dark:#3730A3; --accent:#F59E0B; --success:#16A34A;
+    --card:#FFFFFF; --shadow:rgba(20,23,31,0.07);
   }
   *{box-sizing:border-box;}
-  body{margin:0;background:var(--paper);color:var(--ink);font-family:'Inter',sans-serif;
-    background-image:linear-gradient(var(--paper-line) 1px, transparent 1px);
-    background-size:100% 2.1em;}
+  body{margin:0;background:var(--white);color:var(--ink);font-family:'Inter',sans-serif;}
   header{padding:2.5rem 1.5rem 1.5rem;text-align:center;background:transparent;position:relative;}
-  h1{font-family:'Source Serif 4',serif;font-size:2.1rem;margin:0 0 .3rem;letter-spacing:-.01em;}
+  h1{font-family:'Fraunces',serif;font-size:2.3rem;margin:0 0 .3rem;letter-spacing:-.01em;font-weight:700;}
   header p{color:var(--graphite);margin:0;font-size:.95rem;}
   main{max-width:880px;margin:0 auto;padding:0 1.5rem 4rem;}
-  .panel{background:var(--card);border:1px solid var(--paper-line);border-radius:10px;
-    box-shadow:0 4px 18px var(--shadow);padding:1.6rem;margin-bottom:1.5rem;}
-  .convention{font-family:'IBM Plex Mono',monospace;font-size:.82rem;background:#F5F2E9;
-    border:1px dashed var(--paper-line);border-radius:6px;padding:1rem;white-space:pre-wrap;
+  .panel{background:var(--card);border:1px solid var(--border);border-radius:14px;
+    box-shadow:0 4px 20px var(--shadow);padding:1.6rem;margin-bottom:1.5rem;}
+  .convention{font-family:'IBM Plex Mono',monospace;font-size:.82rem;background:var(--surface);
+    border:1px dashed var(--border);border-radius:8px;padding:1rem;white-space:pre-wrap;
     color:var(--graphite);line-height:1.55;}
-  .upload-zone{border:2px dashed var(--paper-line);border-radius:8px;padding:2rem;text-align:center;}
-  .upload-zone.drag{border-color:var(--stamp);background:#FBF3EF;}
-  button{font-family:'Inter',sans-serif;font-weight:600;border:none;border-radius:6px;
+  .upload-zone{border:2px dashed var(--border);border-radius:10px;padding:2rem;text-align:center;}
+  .upload-zone.drag{border-color:var(--primary);background:#F2F1FD;}
+  button{font-family:'Inter',sans-serif;font-weight:600;border:none;border-radius:8px;
     padding:.7rem 1.3rem;cursor:pointer;font-size:.9rem;}
-  .btn-primary{background:var(--ink);color:#fff;}
-  .btn-primary:hover{background:#101a30;}
-  .btn-primary:disabled{background:#9aa3b3;cursor:not-allowed;}
-  .btn-ghost{background:transparent;color:var(--ink);border:1px solid var(--paper-line);}
-  .btn-link{background:none;border:none;color:var(--ink);text-decoration:underline;cursor:pointer;
+  .btn-primary{background:var(--primary);color:#fff;}
+  .btn-primary:hover{background:var(--primary-dark);}
+  .btn-primary:disabled{background:#B7B4EA;cursor:not-allowed;}
+  .btn-ghost{background:transparent;color:var(--ink);border:1px solid var(--border);}
+  .btn-ghost:hover{background:var(--surface);}
+  .btn-link{background:none;border:none;color:var(--primary);text-decoration:underline;cursor:pointer;
     font-size:.85rem;padding:0;font-weight:600;}
   .badge{display:inline-block;font-family:'IBM Plex Mono',monospace;font-size:.68rem;
-    font-weight:600;letter-spacing:.03em;color:#fff;background:var(--stamp);
-    padding:.2rem .5rem;border-radius:4px;transform:rotate(-2deg);}
-  .card{border:1px solid var(--paper-line);border-radius:8px;padding:1rem 1.2rem;margin-bottom:.9rem;
+    font-weight:600;letter-spacing:.03em;color:#fff;background:var(--accent);
+    padding:.2rem .5rem;border-radius:5px;}
+  .card{border:1px solid var(--border);border-radius:10px;padding:1rem 1.2rem;margin-bottom:.9rem;
     position:relative;background:#fff;}
   .card-head{display:flex;justify-content:space-between;align-items:center;margin-bottom:.6rem;}
   .card textarea, .card input[type=text]{width:100%;font-family:'Inter',sans-serif;font-size:.92rem;
-    border:1px solid var(--paper-line);border-radius:5px;padding:.4rem .6rem;margin:.2rem 0;}
+    border:1px solid var(--border);border-radius:6px;padding:.4rem .6rem;margin:.2rem 0;}
   .choice-row{display:flex;align-items:center;gap:.5rem;margin:.25rem 0;}
-  .remove{color:var(--stamp);background:none;border:none;cursor:pointer;font-size:.85rem;padding:.2rem;}
+  .remove{color:var(--primary);background:none;border:none;cursor:pointer;font-size:.85rem;padding:.2rem;}
   .toolbar{display:flex;justify-content:space-between;align-items:center;margin-bottom:1rem;flex-wrap:wrap;gap:.6rem;}
   .status{font-size:.85rem;color:var(--graphite);margin-top:.6rem;}
   .lang-switch{position:absolute;top:1.2rem;right:1.5rem;display:flex;gap:.3rem;}
-  .lang-btn{background:transparent;border:1px solid var(--paper-line);color:var(--graphite);
+  .lang-btn{background:transparent;border:1px solid var(--border);color:var(--graphite);
     font-family:'IBM Plex Mono',monospace;font-size:.75rem;font-weight:600;padding:.3rem .6rem;
-    border-radius:5px;cursor:pointer;}
+    border-radius:6px;cursor:pointer;}
   .lang-btn.active{background:var(--ink);color:#fff;border-color:var(--ink);}
   .version-select{font-family:'IBM Plex Mono',monospace;font-size:.82rem;padding:.5rem .6rem;
-    border:1px solid var(--paper-line);border-radius:6px;background:#fff;color:var(--ink);}
+    border:1px solid var(--border);border-radius:8px;background:#fff;color:var(--ink);}
   .empty{color:var(--graphite);text-align:center;padding:2rem 0;font-size:.9rem;}
   .hidden{display:none !important;}
 
   /* Auth overlay */
-  .gate-overlay{position:fixed;inset:0;background:rgba(27,39,64,0.55);display:none;
+  .gate-overlay{position:fixed;inset:0;background:rgba(20,23,31,0.55);display:none;
     align-items:center;justify-content:center;z-index:100;padding:1rem;}
-  .gate-box{background:#fff;border-radius:10px;padding:2rem;max-width:380px;width:100%;
+  .gate-box{background:#fff;border-radius:14px;padding:2rem;max-width:380px;width:100%;
     box-shadow:0 12px 40px rgba(0,0,0,0.25);}
-  .gate-box h3{font-family:'Source Serif 4',serif;margin:0 0 .5rem;}
+  .gate-box h3{font-family:'Fraunces',serif;margin:0 0 .5rem;}
   .gate-box p{color:var(--graphite);font-size:.9rem;margin:0 0 1rem;}
-  .gate-box input{width:100%;padding:.6rem .7rem;border:1px solid var(--paper-line);
-    border-radius:6px;margin-bottom:.8rem;font-family:'Inter',sans-serif;}
-  .gate-box select{width:100%;padding:.6rem .7rem;border:1px solid var(--paper-line);
-    border-radius:6px;margin-bottom:.8rem;font-family:'Inter',sans-serif;background:#fff;color:var(--ink);}
-  .gate-error{color:var(--stamp);font-size:.85rem;margin:-.4rem 0 .8rem;display:none;}
+  .gate-box input{width:100%;padding:.6rem .7rem;border:1px solid var(--border);
+    border-radius:8px;margin-bottom:.8rem;font-family:'Inter',sans-serif;}
+  .gate-box select{width:100%;padding:.6rem .7rem;border:1px solid var(--border);
+    border-radius:8px;margin-bottom:.8rem;font-family:'Inter',sans-serif;background:#fff;color:var(--ink);}
+  .gate-error{color:#DC2626;font-size:.85rem;margin:-.4rem 0 .8rem;display:none;}
   .gate-tabs{display:flex;gap:.4rem;margin-bottom:1.2rem;}
-  .gate-tab{flex:1;background:#F5F2E9;color:var(--graphite);border:1px solid var(--paper-line);}
+  .gate-tab{flex:1;background:var(--surface);color:var(--graphite);border:1px solid var(--border);}
   .gate-tab.active{background:var(--ink);color:#fff;border-color:var(--ink);}
 
   /* Account bar */
@@ -80,34 +80,35 @@
 
   /* Buy banner (inside the app view) */
   .buy-banner{display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:.8rem;
-    background:#F5F2E9;border:1px dashed var(--paper-line);border-radius:8px;padding:1rem 1.2rem;}
+    background:var(--surface);border:1px dashed var(--border);border-radius:10px;padding:1rem 1.2rem;}
   .buy-banner p{margin:0;font-size:.9rem;color:var(--graphite);}
 
   /* Credit packs (buy page) */
   .packs{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:.8rem;margin-top:1rem;}
-  .pack{border:1px solid var(--paper-line);border-radius:8px;padding:1rem;text-align:center;}
-  .pack .qty{font-family:'Source Serif 4',serif;font-size:1.3rem;}
+  .pack{border:1px solid var(--border);border-radius:10px;padding:1rem;text-align:center;}
+  .pack .qty{font-family:'Fraunces',serif;font-size:1.3rem;font-weight:600;}
   .pack .price{color:var(--graphite);font-size:.9rem;margin:.3rem 0 .8rem;}
 
   /* Landing page */
-  .hero{text-align:center;padding:2rem 1rem 1rem;}
-  .hero h2{font-family:'Source Serif 4',serif;font-size:1.6rem;margin:0 0 .8rem;}
+  .hero{text-align:center;padding:2rem 1rem 1rem;position:relative;}
+  .hero-key{margin-bottom:.5rem;}
+  .hero h2{font-family:'Fraunces',serif;font-size:1.7rem;margin:0 0 .8rem;font-weight:700;}
   .hero p{color:var(--graphite);max-width:520px;margin:0 auto 1.4rem;}
   .feature-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:1rem;margin-top:1rem;}
   .feature{text-align:center;padding:.5rem;}
   .feature .icon{font-size:1.6rem;margin-bottom:.4rem;}
-  .feature h4{margin:.2rem 0;font-family:'Source Serif 4',serif;font-size:1.05rem;}
+  .feature h4{margin:.2rem 0;font-family:'Fraunces',serif;font-size:1.05rem;}
   .feature p{color:var(--graphite);font-size:.85rem;margin:0;}
   .price-preview{display:flex;justify-content:center;gap:1.5rem;flex-wrap:wrap;margin-top:1rem;}
   .price-preview .tier{text-align:center;}
-  .price-preview .tier .qty{font-family:'Source Serif 4',serif;font-size:1.2rem;}
+  .price-preview .tier .qty{font-family:'Fraunces',serif;font-size:1.2rem;}
   .price-preview .tier .price{color:var(--graphite);font-size:.85rem;}
 
   /* Cookie banner */
   .cookie-banner{position:fixed;bottom:0;left:0;right:0;background:var(--ink);color:#fff;
     padding:1rem 1.5rem;display:flex;justify-content:space-between;align-items:center;
     flex-wrap:wrap;gap:1rem;z-index:90;box-shadow:0 -4px 18px rgba(0,0,0,0.2);}
-  .cookie-banner p{margin:0;font-size:.85rem;max-width:640px;color:#E4DECD;}
+  .cookie-banner p{margin:0;font-size:.85rem;max-width:640px;color:#D6D5F5;}
   .cookie-actions{display:flex;gap:.6rem;flex-shrink:0;}
   .cookie-banner .btn-ghost{color:#fff;border-color:rgba(255,255,255,0.3);}
 </style>
@@ -128,6 +129,20 @@
   <!-- ===== LANDING VIEW (public) ===== -->
   <div id="viewLanding">
     <div class="panel hero">
+      <svg class="hero-key" viewBox="0 0 200 200" width="120" height="120" aria-hidden="true">
+        <defs>
+          <linearGradient id="keyGrad" x1="0" y1="0" x2="1" y2="1">
+            <stop offset="0%" stop-color="#4F46E5"/>
+            <stop offset="100%" stop-color="#F59E0B"/>
+          </linearGradient>
+        </defs>
+        <g transform="rotate(-25 100 100)">
+          <circle cx="70" cy="70" r="38" fill="none" stroke="url(#keyGrad)" stroke-width="14"/>
+          <rect x="100" y="95" width="70" height="14" rx="7" fill="url(#keyGrad)"/>
+          <rect x="140" y="109" width="14" height="24" rx="4" fill="url(#keyGrad)"/>
+          <rect x="160" y="109" width="14" height="30" rx="4" fill="url(#keyGrad)"/>
+        </g>
+      </svg>
       <h2 data-i18n="heroHeadline">From exam questions to QTI, in minutes</h2>
       <p data-i18n="heroSub">Upload a Word or PDF question set, review it, and export a QTI package your LMS can import directly — no manual re-typing.</p>
       <button class="btn-primary" id="heroCta" data-i18n="heroCta">Log in / Sign up</button>

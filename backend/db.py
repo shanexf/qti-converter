@@ -88,6 +88,17 @@ def init_db():
                 FOREIGN KEY (user_id) REFERENCES users(id)
             )
         """)
+        conn.execute("""
+            CREATE TABLE IF NOT EXISTS admin_adjustments (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                user_id INTEGER NOT NULL,
+                amount INTEGER NOT NULL,
+                reason TEXT NOT NULL,
+                admin_email TEXT NOT NULL,
+                created_at REAL NOT NULL,
+                FOREIGN KEY (user_id) REFERENCES users(id)
+            )
+        """)
 
 
 def create_user(email: str, password_hash: str, role: str = "standard",
@@ -230,3 +241,66 @@ def add_credits(user_id: int, amount: int, pack: str, stripe_session_id: str) ->
             return False  # already processed this session
         conn.execute("UPDATE users SET credits = credits + ? WHERE id = ?", (amount, user_id))
         return True
+
+
+def get_purchases_for_user(user_id: int):
+    with get_conn() as conn:
+        rows = conn.execute(
+            "SELECT * FROM credit_purchases WHERE user_id = ? ORDER BY created_at DESC", (user_id,)
+        ).fetchall()
+        return [dict(r) for r in rows]
+
+
+def list_all_purchases():
+    """Purchase records joined with the buyer's email, for export/reporting."""
+    with get_conn() as conn:
+        rows = conn.execute("""
+            SELECT credit_purchases.id, users.email, credit_purchases.pack,
+                   credit_purchases.credits_added, credit_purchases.stripe_session_id,
+                   credit_purchases.created_at
+            FROM credit_purchases
+            JOIN users ON users.id = credit_purchases.user_id
+            ORDER BY credit_purchases.created_at DESC
+        """).fetchall()
+        return [dict(r) for r in rows]
+
+
+def get_account_detail(user_id: int):
+    """Full troubleshooting view of one account: profile + status + purchase
+    and manual-adjustment history. Never includes the password hash."""
+    user = get_user_by_id(user_id)
+    if not user:
+        return None
+    user = dict(user)
+    user.pop("password_hash", None)
+    with get_conn() as conn:
+        adjustments = conn.execute(
+            "SELECT * FROM admin_adjustments WHERE user_id = ? ORDER BY created_at DESC", (user_id,)
+        ).fetchall()
+    return {
+        "user": user,
+        "status": get_status(user_id),
+        "purchases": get_purchases_for_user(user_id),
+        "adjustments": [dict(r) for r in adjustments],
+    }
+
+
+def adjust_credits(user_id: int, amount: int, reason: str, admin_email: str):
+    """Manually grants (positive amount) or removes (negative amount) credits,
+    for support/troubleshooting — e.g. compensating a bug, processing a refund
+    outside Stripe. Every adjustment is permanently logged with who did it and
+    why. Refuses to push a balance below zero."""
+    with get_conn() as conn:
+        row = conn.execute("SELECT credits FROM users WHERE id = ?", (user_id,)).fetchone()
+        if not row:
+            return False, "User not found."
+        new_balance = row["credits"] + amount
+        if new_balance < 0:
+            return False, f"That would take the balance below zero (current: {row['credits']})."
+        conn.execute("UPDATE users SET credits = ? WHERE id = ?", (new_balance, user_id))
+        conn.execute(
+            "INSERT INTO admin_adjustments (user_id, amount, reason, admin_email, created_at) "
+            "VALUES (?, ?, ?, ?, ?)",
+            (user_id, amount, reason, admin_email, time.time()),
+        )
+        return True, f"New balance: {new_balance}"

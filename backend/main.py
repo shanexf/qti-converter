@@ -9,6 +9,7 @@ from extract import extract_text
 from parser import parse_questions
 from qti_generator import build_qti_package
 from ratelimit import rate_limit
+from csv_export import rows_to_csv
 import db
 import auth
 import billing
@@ -207,9 +208,66 @@ async def stripe_webhook(request: Request, stripe_signature: str = Header(defaul
 
 # --- Admin ---
 
+USER_EXPORT_COLUMNS = [
+    "id", "email", "full_name", "phone", "occupation", "institution",
+    "country", "bundesland", "role", "credits", "monthly_quota_limit",
+    "monthly_quota_used", "monthly_quota_period", "marketing_consent", "created_at",
+]
+PURCHASE_EXPORT_COLUMNS = ["id", "email", "pack", "credits_added", "stripe_session_id", "created_at"]
+
+
 @app.get("/api/admin/users")
 def admin_list_users(admin=Depends(require_admin)):
     return {"users": db.list_users()}
+
+
+@app.get("/api/admin/users/export", dependencies=[
+    Depends(rate_limit("admin_export", 20, RATE_LIMIT_WINDOW)),
+])
+def admin_export_users(admin=Depends(require_admin)):
+    csv_text = rows_to_csv(db.list_users(), USER_EXPORT_COLUMNS)
+    return StreamingResponse(
+        io.StringIO(csv_text),
+        media_type="text/csv",
+        headers={"Content-Disposition": "attachment; filename=keyform-customers.csv"},
+    )
+
+
+@app.get("/api/admin/purchases/export", dependencies=[
+    Depends(rate_limit("admin_export", 20, RATE_LIMIT_WINDOW)),
+])
+def admin_export_purchases(admin=Depends(require_admin)):
+    csv_text = rows_to_csv(db.list_all_purchases(), PURCHASE_EXPORT_COLUMNS)
+    return StreamingResponse(
+        io.StringIO(csv_text),
+        media_type="text/csv",
+        headers={"Content-Disposition": "attachment; filename=keyform-payments.csv"},
+    )
+
+
+@app.get("/api/admin/users/{user_id}")
+def admin_get_user(user_id: int, admin=Depends(require_admin)):
+    detail = db.get_account_detail(user_id)
+    if not detail:
+        raise HTTPException(404, "No account with that ID.")
+    return detail
+
+
+@app.post("/api/admin/users/{user_id}/adjust-credits")
+def admin_adjust_credits(user_id: int, body: dict, admin=Depends(require_admin)):
+    amount = int((body or {}).get("amount", 0))
+    reason = (body or {}).get("reason", "").strip()
+    if amount == 0:
+        raise HTTPException(400, "amount must be non-zero.")
+    if not reason:
+        raise HTTPException(400, "Please provide a reason — this is logged permanently for audit purposes.")
+    if not db.get_user_by_id(user_id):
+        raise HTTPException(404, "No account with that ID.")
+
+    ok, info = db.adjust_credits(user_id, amount, reason, admin["email"])
+    if not ok:
+        raise HTTPException(400, info)
+    return {"updated": True, "info": info, "status": db.get_status(user_id)}
 
 
 # --- One-time account setup (for creating admin/free_monthly accounts on the
@@ -217,9 +275,12 @@ def admin_list_users(admin=Depends(require_admin)):
 # container where the database volume lives) ---
 
 SETUP_SECRET = os.environ.get("SETUP_SECRET", "")
+RATE_LIMIT_SETUP = int(os.environ.get("RATE_LIMIT_SETUP", "5"))  # per hour, per visitor
 
 
-@app.post("/api/setup/create-account")
+@app.post("/api/setup/create-account", dependencies=[
+    Depends(rate_limit("setup", RATE_LIMIT_SETUP, RATE_LIMIT_WINDOW)),
+])
 def setup_create_account(body: dict, x_setup_secret: str = Header(default=None)):
     if not SETUP_SECRET or x_setup_secret != SETUP_SECRET:
         raise HTTPException(403, "Setup is disabled or the secret is wrong.")
@@ -247,7 +308,9 @@ def setup_create_account(body: dict, x_setup_secret: str = Header(default=None))
     return {"created": True, "user": user}
 
 
-@app.post("/api/setup/delete-account")
+@app.post("/api/setup/delete-account", dependencies=[
+    Depends(rate_limit("setup", RATE_LIMIT_SETUP, RATE_LIMIT_WINDOW)),
+])
 def setup_delete_account(body: dict, x_setup_secret: str = Header(default=None)):
     """For fixing mistakes (e.g. an account created with placeholder/wrong
     details) — not exposed anywhere in the UI, deliberately."""
