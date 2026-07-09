@@ -150,7 +150,15 @@ async function tryLoad(){
   if (!authToken()){ el("loginOverlay").style.display = "flex"; return; }
   try{
     const meRes = await fetch(`${API_BASE}/api/me`, { headers: headers(false) });
-    if (!meRes.ok){ localStorage.removeItem("qti_admin_token"); el("loginOverlay").style.display = "flex"; return; }
+    if (!meRes.ok){
+      localStorage.removeItem("qti_admin_token");
+      if (meRes.status !== 401){
+        el("loginError").textContent = `Server returned an error (status ${meRes.status}). Please try again in a moment.`;
+        el("loginError").style.display = "block";
+      }
+      el("loginOverlay").style.display = "flex";
+      return;
+    }
     const me = await meRes.json();
     if (me.status.role !== "admin"){
       el("loginError").textContent = "This account isn't an admin account.";
@@ -164,6 +172,9 @@ async function tryLoad(){
     el("adminPanels").classList.remove("hidden");
     await loadUsers();
   }catch(err){
+    console.error("Keyform admin: tryLoad failed:", err);
+    el("loginError").textContent = "Could not reach the server (" + err.message + "). Check your connection and try again.";
+    el("loginError").style.display = "block";
     el("loginOverlay").style.display = "flex";
   }
 }
