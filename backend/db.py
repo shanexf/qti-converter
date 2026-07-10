@@ -64,16 +64,21 @@ def init_db():
                 monthly_quota_limit INTEGER NOT NULL DEFAULT 0,
                 monthly_quota_used INTEGER NOT NULL DEFAULT 0,
                 monthly_quota_period TEXT NOT NULL DEFAULT '',
-                full_name TEXT NOT NULL DEFAULT '',
-                phone TEXT NOT NULL DEFAULT '',
-                occupation TEXT NOT NULL DEFAULT '',
-                institution TEXT NOT NULL DEFAULT '',
-                marketing_consent INTEGER NOT NULL DEFAULT 0,
-                privacy_accepted INTEGER NOT NULL DEFAULT 0,
                 created_at REAL NOT NULL
             )
         """)
-        # Added after the initial release — safe on both fresh and existing databases
+        # Every column below was added after the initial release. Each one is
+        # migrated individually so this works correctly whether init_db() is
+        # running against a brand-new database OR an existing production one
+        # that predates that column — CREATE TABLE IF NOT EXISTS alone does
+        # NOT add columns to a table that already exists, which is exactly
+        # the bug this fixes.
+        _ensure_column(conn, "users", "full_name", "TEXT NOT NULL DEFAULT ''")
+        _ensure_column(conn, "users", "phone", "TEXT NOT NULL DEFAULT ''")
+        _ensure_column(conn, "users", "occupation", "TEXT NOT NULL DEFAULT ''")
+        _ensure_column(conn, "users", "institution", "TEXT NOT NULL DEFAULT ''")
+        _ensure_column(conn, "users", "marketing_consent", "INTEGER NOT NULL DEFAULT 0")
+        _ensure_column(conn, "users", "privacy_accepted", "INTEGER NOT NULL DEFAULT 0")
         _ensure_column(conn, "users", "country", "TEXT NOT NULL DEFAULT ''")
         _ensure_column(conn, "users", "bundesland", "TEXT NOT NULL DEFAULT ''")
 
