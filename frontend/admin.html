@@ -171,6 +171,7 @@ async function tryLoad(){
     el("loginOverlay").style.display = "none";
     el("adminPanels").classList.remove("hidden");
     await loadUsers();
+    resetAdminIdleTimer();
   }catch(err){
     console.error("Keyform admin: tryLoad failed:", err);
     el("loginError").textContent = "Could not reach the server (" + err.message + "). Check your connection and try again.";
@@ -207,11 +208,33 @@ el("loginSubmitBtn").onclick = async () => {
   }
 };
 
-el("adminLogoutBtn").onclick = () => {
+function performAdminLogout(reason){
   localStorage.removeItem("qti_admin_token");
   el("adminPanels").classList.add("hidden");
+  el("detailPanel").classList.add("hidden");
   el("loginOverlay").style.display = "flex";
-};
+  if (reason){
+    el("loginError").textContent = reason;
+    el("loginError").style.display = "block";
+  }
+}
+el("adminLogoutBtn").onclick = () => performAdminLogout();
+
+// --- Auto logout after inactivity (security — stricter here than the main
+// app, since this page has access to every customer's data and payments) ---
+const ADMIN_IDLE_TIMEOUT_MS = 10 * 60 * 1000; // 10 minutes
+let adminIdleTimer = null;
+function resetAdminIdleTimer(){
+  if (!authToken()) return;
+  clearTimeout(adminIdleTimer);
+  adminIdleTimer = setTimeout(() => {
+    performAdminLogout("You were logged out after 10 minutes of inactivity, to protect customer data. Please log in again.");
+  }, ADMIN_IDLE_TIMEOUT_MS);
+}
+["mousemove","keydown","mousedown","touchstart","scroll"].forEach((evt) => {
+  document.addEventListener(evt, resetAdminIdleTimer, {passive: true});
+});
+resetAdminIdleTimer();
 
 async function loadUsers(){
   const res = await fetch(`${API_BASE}/api/admin/users`, { headers: headers(false) });

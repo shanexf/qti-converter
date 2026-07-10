@@ -465,6 +465,7 @@ Answer: Tokyo
     changePasswordSubmit: "Update password",
     passwordChanged: "Password updated.",
     passwordError: "Something went wrong — check your details and try again.",
+    loggedOutInactivity: "You were logged out after 15 minutes of inactivity, to keep your account secure. Please log in again.",
   },
   de: {
     title: "Keyform",
@@ -568,6 +569,7 @@ Antwort: Tokio
     changePasswordSubmit: "Passwort aktualisieren",
     passwordChanged: "Passwort aktualisiert.",
     passwordError: "Etwas ist schiefgelaufen — überprüfe deine Angaben und versuche es erneut.",
+    loggedOutInactivity: "Du wurdest nach 15 Minuten Inaktivität abgemeldet, um dein Konto zu schützen. Bitte melde dich erneut an.",
   },
 };
 
@@ -709,6 +711,7 @@ el("authSubmit").onclick = async () => {
     el("accountEmail").textContent = email;
     renderBalance();
     showView("app");
+    resetIdleTimer();
   }catch(err){
     el("gateError").textContent = t("authError");
     el("gateError").style.display = "block";
@@ -718,13 +721,34 @@ el("authSubmit").onclick = async () => {
 };
 el("authPassword").addEventListener("keydown", (e) => { if (e.key === "Enter") el("authSubmit").click(); });
 
-el("logoutBtn").onclick = () => {
+function performLogout(reason){
   localStorage.removeItem("qti_token");
   currentStatus = null;
   questions = [];
   renderQuestions();
   showView("landing");
-};
+  if (reason){
+    showAuthGate("login");
+    el("gateError").textContent = reason;
+    el("gateError").style.display = "block";
+  }
+}
+el("logoutBtn").onclick = () => performLogout();
+
+// --- Auto logout after inactivity (security) ---
+const IDLE_TIMEOUT_MS = 15 * 60 * 1000; // 15 minutes
+let idleTimer = null;
+function resetIdleTimer(){
+  if (!authToken()) return; // nothing to protect if not logged in
+  clearTimeout(idleTimer);
+  idleTimer = setTimeout(() => {
+    performLogout(t("loggedOutInactivity"));
+  }, IDLE_TIMEOUT_MS);
+}
+["mousemove","keydown","mousedown","touchstart","scroll"].forEach((evt) => {
+  document.addEventListener(evt, resetIdleTimer, {passive: true});
+});
+resetIdleTimer();
 
 // --- Change password ---
 el("changePasswordLink").onclick = () => {
@@ -782,6 +806,7 @@ async function loadMe(){
     el("accountEmail").textContent = data.email;
     renderBalance();
     showView("app");
+    resetIdleTimer();
   }catch(err){ showView("landing"); }
 }
 
